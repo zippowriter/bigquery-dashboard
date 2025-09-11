@@ -1,0 +1,9 @@
+exclude = ["__pycache__", ".venv"]
+
+[lint.pycodestyle]
+max-line-length = 200
+
+[lint.isort]
+combine-as-imports = true
+lines-between-types = 1
+lines-after-imports = 2
