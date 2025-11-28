@@ -1,5 +1,5 @@
 def main():
-    print("Hello from bq-table-reference!")
+    print("Hello from bigquery-dashboard!")
 
 
 if __name__ == "__main__":
