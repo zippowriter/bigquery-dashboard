@@ -1,5 +1,5 @@
 [project]
-name = "bq-table-reference"
+name = "bigquery-dashboard"
 version = "0.1.0"
 description = "BigQuery テーブル参照分析ツール"
 readme = "README.md"
