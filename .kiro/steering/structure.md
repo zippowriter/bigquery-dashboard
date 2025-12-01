@@ -12,8 +12,11 @@
 **例**: `main.py`, `pyproject.toml`, `README.md`
 
 ### テストディレクトリ
-**場所**: `/test/`
+**場所**: `/tests/`
 **目的**: pytestによるテストコード
+**構成**:
+- `/tests/unit/` - 単体テスト（モック使用、高速実行）
+- `/tests/integration/` - 統合テスト（実環境API使用）
 **例**: `test_*.py` 形式のファイル
 
 ### 仮想環境
