@@ -11,4 +11,11 @@ dev = [
   "pyright>=1.1.407",
   "pytest>=9.0.1",
   "ruff>=0.14.6",
+  "taskipy>=1.14.1",
 ]
+
+[tool.taskipy.tasks]
+format = "uv run ruff format"
+lint = "uv run ruff lint"
+test = "uv run pytest"
+type-check = "uv run pyright"
