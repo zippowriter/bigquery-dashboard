@@ -23,13 +23,13 @@ Use whichever pattern fits the work breakdown:
 ---
 
 - [ ] 1. プロジェクト構造とパッケージ基盤の構築
-- [ ] 1.1 (P) src レイアウトとパッケージディレクトリ構造を作成する
+- [x] 1.1 (P) src レイアウトとパッケージディレクトリ構造を作成する
   - src/bq_table_reference/ をルートとしたパッケージ構造を作成する
   - domain、infrastructure、application の各レイヤーディレクトリと __init__.py を配置する
   - pyproject.toml にパッケージ設定と google-cloud-bigquery 依存を追加する
   - _Requirements: 5.1_
 
-- [ ] 1.2 (P) テストディレクトリ構造と pytest 設定を構築する
+- [x] 1.2 (P) テストディレクトリ構造と pytest 設定を構築する
   - tests/unit/ と tests/integration/ のディレクトリ構造を作成する
   - conftest.py に共通フィクスチャの雛形を配置する
   - pytest の基本設定を pyproject.toml に追加する
