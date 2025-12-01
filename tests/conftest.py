@@ -4,10 +4,40 @@
 """
 
 from datetime import datetime, timezone
-from typing import Iterator
+from typing import TypedDict
 from unittest.mock import MagicMock
 
 import pytest
+
+
+class DatasetInfoData(TypedDict):
+    """DatasetInfo 生成用データの型定義。"""
+
+    dataset_id: str
+    project: str
+    full_path: str
+    created: datetime | None
+    modified: datetime | None
+    location: str | None
+
+
+class TableInfoData(TypedDict):
+    """TableInfo 生成用データの型定義。"""
+
+    table_id: str
+    dataset_id: str
+    project: str
+    full_path: str
+    table_type: str
+
+
+class LoadResultData(TypedDict):
+    """LoadResult 生成用データの型定義。"""
+
+    datasets_success: int
+    datasets_failed: int
+    tables_total: int
+    errors: dict[str, str]
 
 
 @pytest.fixture
@@ -24,48 +54,48 @@ def mock_adapter() -> MagicMock:
 
 
 @pytest.fixture
-def sample_dataset_info_data() -> dict:
+def sample_dataset_info_data() -> DatasetInfoData:
     """テスト用 DatasetInfo 生成データを提供する。
 
     Returns:
         DatasetInfo 生成に必要なフィールドの辞書。
     """
-    return {
-        "dataset_id": "test_dataset",
-        "project": "test-project",
-        "full_path": "test-project.test_dataset",
-        "created": datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
-        "modified": datetime(2024, 6, 1, 0, 0, 0, tzinfo=timezone.utc),
-        "location": "US",
-    }
+    return DatasetInfoData(
+        dataset_id="test_dataset",
+        project="test-project",
+        full_path="test-project.test_dataset",
+        created=datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        modified=datetime(2024, 6, 1, 0, 0, 0, tzinfo=timezone.utc),
+        location="US",
+    )
 
 
 @pytest.fixture
-def sample_table_info_data() -> dict:
+def sample_table_info_data() -> TableInfoData:
     """テスト用 TableInfo 生成データを提供する。
 
     Returns:
         TableInfo 生成に必要なフィールドの辞書。
     """
-    return {
-        "table_id": "test_table",
-        "dataset_id": "test_dataset",
-        "project": "test-project",
-        "full_path": "test-project.test_dataset.test_table",
-        "table_type": "TABLE",
-    }
+    return TableInfoData(
+        table_id="test_table",
+        dataset_id="test_dataset",
+        project="test-project",
+        full_path="test-project.test_dataset.test_table",
+        table_type="TABLE",
+    )
 
 
 @pytest.fixture
-def sample_load_result_data() -> dict:
+def sample_load_result_data() -> LoadResultData:
     """テスト用 LoadResult 生成データを提供する。
 
     Returns:
         LoadResult 生成に必要なフィールドの辞書。
     """
-    return {
-        "datasets_success": 5,
-        "datasets_failed": 1,
-        "tables_total": 25,
-        "errors": {"failed_dataset": "Permission denied"},
-    }
+    return LoadResultData(
+        datasets_success=5,
+        datasets_failed=1,
+        tables_total=25,
+        errors={"failed_dataset": "Permission denied"},
+    )

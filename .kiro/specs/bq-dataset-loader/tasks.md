@@ -36,7 +36,7 @@ Use whichever pattern fits the work breakdown:
   - _Requirements: 1.1, 2.1_
 
 - [ ] 2. ドメインモデルの実装
-- [ ] 2.1 (P) データセット情報を表現するイミュータブルなデータ構造を実装する
+- [x] 2.1 (P) データセット情報を表現するイミュータブルなデータ構造を実装する
   - RED: データセットID、プロジェクト、フルパス、作成日時、更新日時、ロケーションの保持を検証するテストを書く
   - GREEN: frozen dataclass として DatasetInfo を実装し、全テストをパスさせる
   - REFACTOR: 各フィールドの型とオプショナル設定を整理する
