@@ -39,7 +39,7 @@ where = ["src"]
 
 [tool.taskipy.tasks]
 format = "uv run ruff format"
-lint = "uv run ruff lint"
+lint = "uv run ruff check"
 test = "uv run pytest"
 test-integration = "uv run pytest tests/integration -v -m integration"
 test-unit = "uv run pytest tests/unit -v"
