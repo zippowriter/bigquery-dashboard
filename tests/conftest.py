@@ -4,10 +4,13 @@
 """
 
 from datetime import datetime, timezone
-from typing import TypedDict
+from typing import Literal, TypedDict
 from unittest.mock import MagicMock
 
 import pytest
+
+# TableType 型定義（models.py と同等）
+TableType = Literal["TABLE", "VIEW", "MATERIALIZED_VIEW", "EXTERNAL"]
 
 
 class DatasetInfoData(TypedDict):
@@ -28,7 +31,7 @@ class TableInfoData(TypedDict):
     dataset_id: str
     project: str
     full_path: str
-    table_type: str
+    table_type: TableType
 
 
 class LoadResultData(TypedDict):

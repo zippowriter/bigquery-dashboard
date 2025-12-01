@@ -4,8 +4,12 @@ BigQuery のデータセットとテーブルのメタデータを表現する�
 """
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
+
+# テーブル種別の型定義
+TableType = Literal["TABLE", "VIEW", "MATERIALIZED_VIEW", "EXTERNAL"]
 
 
 class DatasetInfo(BaseModel):
@@ -28,3 +32,23 @@ class DatasetInfo(BaseModel):
     created: datetime | None
     modified: datetime | None
     location: str | None
+
+
+class TableInfo(BaseModel):
+    """BigQuery テーブルのメタデータを表現するイミュータブルなデータ構造。
+
+    Attributes:
+        table_id: BigQuery テーブル ID
+        dataset_id: 親データセットの ID
+        project: GCP プロジェクト ID
+        full_path: "project.dataset.table" 形式のフルパス
+        table_type: テーブル種別（TABLE/VIEW/MATERIALIZED_VIEW/EXTERNAL）
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    table_id: str
+    dataset_id: str
+    project: str
+    full_path: str
+    table_type: TableType

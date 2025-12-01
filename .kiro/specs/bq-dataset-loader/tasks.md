@@ -42,7 +42,7 @@ Use whichever pattern fits the work breakdown:
   - REFACTOR: 各フィールドの型とオプショナル設定を整理する
   - _Requirements: 1.2, 3.1_
 
-- [ ] 2.2 (P) テーブル情報を表現するイミュータブルなデータ構造を実装する
+- [x] 2.2 (P) テーブル情報を表現するイミュータブルなデータ構造を実装する
   - RED: テーブルID、データセットID、プロジェクト、フルパス、テーブル種別の保持を検証するテストを書く
   - GREEN: frozen dataclass として TableInfo を実装し、全テストをパスさせる
   - REFACTOR: テーブル種別の Literal 型定義を追加し、型安全性を確保する
