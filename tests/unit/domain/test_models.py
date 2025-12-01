@@ -9,6 +9,7 @@ import pytest
 
 from pydantic import ValidationError
 
+from bq_table_reference.domain.models import DatasetInfo, TableInfo
 from tests.conftest import DatasetInfoData, TableInfoData
 
 
@@ -86,7 +87,7 @@ class TestDatasetInfo:
 
         # set に追加できることを確認
         # Pydantic frozen model はハッシュ可能だが pyright が認識しないため無視
-        dataset_set: set[DatasetInfo] = set()
+        dataset_set: set[DatasetInfo] = set[DatasetInfo]()
         dataset_set.add(dataset_info)
         assert dataset_info in dataset_set
 
@@ -193,7 +194,7 @@ class TestTableInfo:
         table_info = TableInfo(**sample_table_info_data)
 
         # set に追加できることを確認
-        table_set: set[TableInfo] = set()
+        table_set: set[TableInfo] = set[TableInfo]()
         table_set.add(table_info)
         assert table_info in table_set
 
