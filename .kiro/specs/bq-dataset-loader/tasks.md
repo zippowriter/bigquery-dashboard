@@ -22,7 +22,7 @@ Use whichever pattern fits the work breakdown:
 
 ---
 
-- [ ] 1. プロジェクト構造とパッケージ基盤の構築
+- [x] 1. プロジェクト構造とパッケージ基盤の構築
 - [x] 1.1 (P) src レイアウトとパッケージディレクトリ構造を作成する
   - src/bq_table_reference/ をルートとしたパッケージ構造を作成する
   - domain、infrastructure、application の各レイヤーディレクトリと __init__.py を配置する
@@ -35,7 +35,7 @@ Use whichever pattern fits the work breakdown:
   - pytest の基本設定を pyproject.toml に追加する
   - _Requirements: 1.1, 2.1_
 
-- [ ] 2. ドメインモデルの実装
+- [x] 2. ドメインモデルの実装
 - [x] 2.1 (P) データセット情報を表現するイミュータブルなデータ構造を実装する
   - RED: データセットID、プロジェクト、フルパス、作成日時、更新日時、ロケーションの保持を検証するテストを書く
   - GREEN: frozen dataclass として DatasetInfo を実装し、全テストをパスさせる
@@ -60,7 +60,7 @@ Use whichever pattern fits the work breakdown:
   - REFACTOR: 各例外に解決方法のガイダンスメッセージを追加する
   - _Requirements: 1.3, 1.4, 2.3, 5.3_
 
-- [ ] 3. BigQuery クライアントアダプターの実装
+- [x] 3. BigQuery クライアントアダプターの実装
 - [x] 3.1 アダプターの初期化と認証処理を実装する
   - RED: アダプターの初期化、ADC 認証情報の取得、認証失敗時の例外変換を検証するモックテストを書く
   - GREEN: BQClientAdapter のコンストラクタと認証処理を実装し、全テストをパスさせる
@@ -82,7 +82,7 @@ Use whichever pattern fits the work breakdown:
   - 依存: タスク 3.1（アダプター初期化）の完了が必要
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 4. データセットローダーの実装
+- [x] 4. データセットローダーの実装
 - [x] 4.1 ローダーの初期化とオンメモリデータ保持構造を実装する
   - RED: アダプターの受け取り、内部辞書構造の初期化を検証するテストを書く
   - GREEN: DatasetLoader のコンストラクタと内部データ構造（_datasets、_tables、_tables_by_dataset）を実装する
