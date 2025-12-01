@@ -7,6 +7,7 @@ BigQuery クライアントアダプターの初期化、認証処理、
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from google.auth import exceptions as auth_exceptions
 
 from bq_table_reference.domain.exceptions import AuthenticationError

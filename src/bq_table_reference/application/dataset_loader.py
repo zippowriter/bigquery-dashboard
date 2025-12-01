@@ -4,11 +4,13 @@
 """
 
 import logging
+
 from typing import Protocol
 
 from bq_table_reference.domain.exceptions import DatasetLoaderError
 from bq_table_reference.domain.models import DatasetInfo, LoadResult, TableInfo
 from bq_table_reference.infrastructure.bq_client_adapter import BQClientAdapter
+
 
 logger = logging.getLogger(__name__)
 
