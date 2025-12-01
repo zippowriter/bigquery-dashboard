@@ -9,6 +9,9 @@ dependencies = [
   "pydantic>=2.12.5",
 ]
 
+[project.scripts]
+main = "main:main"
+
 [dependency-groups]
 dev = [
   "pyright>=1.1.407",
