@@ -102,3 +102,27 @@ def sample_load_result_data() -> LoadResultData:
         tables_total=25,
         errors={"failed_dataset": "Permission denied"},
     )
+
+
+@pytest.fixture
+def sample_dataset_info(sample_dataset_info_data: DatasetInfoData) -> "DatasetInfo":
+    """テスト用 DatasetInfo インスタンスを提供する。
+
+    Returns:
+        DatasetInfo インスタンス。
+    """
+    from bq_table_reference.domain.models import DatasetInfo
+
+    return DatasetInfo(**sample_dataset_info_data)
+
+
+@pytest.fixture
+def sample_table_info(sample_table_info_data: TableInfoData) -> "TableInfo":
+    """テスト用 TableInfo インスタンスを提供する。
+
+    Returns:
+        TableInfo インスタンス。
+    """
+    from bq_table_reference.domain.models import TableInfo
+
+    return TableInfo(**sample_table_info_data)

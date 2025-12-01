@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+
 # テーブル種別の型定義
 TableType = Literal["TABLE", "VIEW", "MATERIALIZED_VIEW", "EXTERNAL"]
 
