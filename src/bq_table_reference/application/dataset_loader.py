@@ -158,3 +158,38 @@ class DatasetLoader:
             tables_total=tables_total,
             errors=errors,
         )
+
+    def get_dataset(self, dataset_id: str) -> DatasetInfo | None:
+        """ID でデータセット情報を取得する。
+
+        Args:
+            dataset_id: BigQuery データセット ID。
+
+        Returns:
+            見つかった場合は DatasetInfo、それ以外は None。
+
+        計算量: O(1)
+        """
+        return self._datasets.get(dataset_id)
+
+    def get_table(self, full_path: str) -> TableInfo | None:
+        """フルパスでテーブル情報を取得する。
+
+        Args:
+            full_path: "project.dataset.table" 形式のテーブルフルパス。
+
+        Returns:
+            見つかった場合は TableInfo、それ以外は None。
+        """
+        return self._tables.get(full_path)
+
+    def get_tables_by_dataset(self, dataset_id: str) -> list[TableInfo]:
+        """データセット内の全テーブルを取得する。
+
+        Args:
+            dataset_id: BigQuery データセット ID。
+
+        Returns:
+            TableInfo オブジェクトのリスト。データセットが見つからない場合は空リスト。
+        """
+        return self._tables_by_dataset.get(dataset_id, [])

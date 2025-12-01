@@ -3,11 +3,16 @@
 テスト全体で使用するフィクスチャを定義する。
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 from unittest.mock import MagicMock
 
 import pytest
+
+if TYPE_CHECKING:
+    from bq_table_reference.domain.models import DatasetInfo, TableInfo
 
 # TableType 型定義（models.py と同等）
 TableType = Literal["TABLE", "VIEW", "MATERIALIZED_VIEW", "EXTERNAL"]

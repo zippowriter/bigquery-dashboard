@@ -438,3 +438,290 @@ class TestDatasetLoaderLoadAllMultipleDatasets:
         assert len(loader._tables) == 2
         assert result.datasets_success == 2
         assert result.tables_total == 2
+
+
+class TestDatasetLoaderGetDataset:
+    """DatasetLoader の get_dataset メソッドに関するテスト。"""
+
+    def test_get_dataset_returns_dataset_info_by_id(
+        self,
+        mock_adapter: MagicMock,
+        sample_dataset_info: DatasetInfo,
+    ) -> None:
+        """get_dataset は dataset_id で DatasetInfo を返す。"""
+        mock_adapter.list_datasets.return_value = iter([sample_dataset_info])
+        mock_adapter.list_tables.return_value = iter([])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_dataset(sample_dataset_info.dataset_id)
+
+        assert result is not None
+        assert result == sample_dataset_info
+
+    def test_get_dataset_returns_none_for_unknown_id(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """get_dataset は存在しない dataset_id に対して None を返す。"""
+        mock_adapter.list_datasets.return_value = iter([])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_dataset("nonexistent_dataset")
+
+        assert result is None
+
+    def test_get_dataset_is_o1_complexity(self, mock_adapter: MagicMock) -> None:
+        """get_dataset は O(1) の計算量で動作する（辞書検索を使用）。"""
+        # 複数のデータセットを用意
+        datasets = [
+            DatasetInfo(
+                dataset_id=f"dataset_{i}",
+                project="test-project",
+                full_path=f"test-project.dataset_{i}",
+                created=None,
+                modified=None,
+                location=None,
+            )
+            for i in range(100)
+        ]
+
+        mock_adapter.list_datasets.return_value = iter(datasets)
+        mock_adapter.list_tables.return_value = iter([])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        # 任意の位置のデータセットを検索
+        result = loader.get_dataset("dataset_50")
+
+        assert result is not None
+        assert result.dataset_id == "dataset_50"
+
+    def test_get_dataset_before_load_returns_none(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """load_all 呼び出し前の get_dataset は None を返す。"""
+        loader = DatasetLoader(adapter=mock_adapter)
+
+        result = loader.get_dataset("any_dataset")
+
+        assert result is None
+
+
+class TestDatasetLoaderGetTable:
+    """DatasetLoader の get_table メソッドに関するテスト。"""
+
+    def test_get_table_returns_table_info_by_full_path(
+        self,
+        mock_adapter: MagicMock,
+        sample_dataset_info: DatasetInfo,
+        sample_table_info: TableInfo,
+    ) -> None:
+        """get_table は full_path で TableInfo を返す。"""
+        mock_adapter.list_datasets.return_value = iter([sample_dataset_info])
+        mock_adapter.list_tables.return_value = iter([sample_table_info])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_table(sample_table_info.full_path)
+
+        assert result is not None
+        assert result == sample_table_info
+
+    def test_get_table_returns_none_for_unknown_path(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """get_table は存在しない full_path に対して None を返す。"""
+        mock_adapter.list_datasets.return_value = iter([])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_table("project.dataset.nonexistent_table")
+
+        assert result is None
+
+    def test_get_table_is_efficient(self, mock_adapter: MagicMock) -> None:
+        """get_table は効率的に動作する（辞書検索を使用）。"""
+        dataset = DatasetInfo(
+            dataset_id="test_dataset",
+            project="test-project",
+            full_path="test-project.test_dataset",
+            created=None,
+            modified=None,
+            location=None,
+        )
+        # 複数のテーブルを用意
+        tables = [
+            TableInfo(
+                table_id=f"table_{i}",
+                dataset_id="test_dataset",
+                project="test-project",
+                full_path=f"test-project.test_dataset.table_{i}",
+                table_type="TABLE",
+            )
+            for i in range(100)
+        ]
+
+        mock_adapter.list_datasets.return_value = iter([dataset])
+        mock_adapter.list_tables.return_value = iter(tables)
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        # 任意の位置のテーブルを検索
+        result = loader.get_table("test-project.test_dataset.table_50")
+
+        assert result is not None
+        assert result.table_id == "table_50"
+
+    def test_get_table_before_load_returns_none(self, mock_adapter: MagicMock) -> None:
+        """load_all 呼び出し前の get_table は None を返す。"""
+        loader = DatasetLoader(adapter=mock_adapter)
+
+        result = loader.get_table("project.dataset.table")
+
+        assert result is None
+
+
+class TestDatasetLoaderGetTablesByDataset:
+    """DatasetLoader の get_tables_by_dataset メソッドに関するテスト。"""
+
+    def test_get_tables_by_dataset_returns_tables_list(
+        self,
+        mock_adapter: MagicMock,
+        sample_dataset_info: DatasetInfo,
+        sample_table_info: TableInfo,
+    ) -> None:
+        """get_tables_by_dataset は指定したデータセットのテーブルリストを返す。"""
+        mock_adapter.list_datasets.return_value = iter([sample_dataset_info])
+        mock_adapter.list_tables.return_value = iter([sample_table_info])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_tables_by_dataset(sample_dataset_info.dataset_id)
+
+        assert len(result) == 1
+        assert sample_table_info in result
+
+    def test_get_tables_by_dataset_returns_empty_list_for_unknown_dataset(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """get_tables_by_dataset は存在しないデータセットに対して空リストを返す。"""
+        mock_adapter.list_datasets.return_value = iter([])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_tables_by_dataset("nonexistent_dataset")
+
+        assert result == []
+
+    def test_get_tables_by_dataset_returns_multiple_tables(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """get_tables_by_dataset は複数のテーブルを返す。"""
+        dataset = DatasetInfo(
+            dataset_id="test_dataset",
+            project="test-project",
+            full_path="test-project.test_dataset",
+            created=None,
+            modified=None,
+            location=None,
+        )
+        table1 = TableInfo(
+            table_id="table1",
+            dataset_id="test_dataset",
+            project="test-project",
+            full_path="test-project.test_dataset.table1",
+            table_type="TABLE",
+        )
+        table2 = TableInfo(
+            table_id="table2",
+            dataset_id="test_dataset",
+            project="test-project",
+            full_path="test-project.test_dataset.table2",
+            table_type="VIEW",
+        )
+
+        mock_adapter.list_datasets.return_value = iter([dataset])
+        mock_adapter.list_tables.return_value = iter([table1, table2])
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_tables_by_dataset("test_dataset")
+
+        assert len(result) == 2
+        assert table1 in result
+        assert table2 in result
+
+    def test_get_tables_by_dataset_before_load_returns_empty_list(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """load_all 呼び出し前の get_tables_by_dataset は空リストを返す。"""
+        loader = DatasetLoader(adapter=mock_adapter)
+
+        result = loader.get_tables_by_dataset("any_dataset")
+
+        assert result == []
+
+    def test_get_tables_by_dataset_returns_only_tables_from_specified_dataset(
+        self, mock_adapter: MagicMock
+    ) -> None:
+        """get_tables_by_dataset は指定したデータセットのテーブルのみを返す。"""
+        dataset1 = DatasetInfo(
+            dataset_id="dataset1",
+            project="test-project",
+            full_path="test-project.dataset1",
+            created=None,
+            modified=None,
+            location=None,
+        )
+        dataset2 = DatasetInfo(
+            dataset_id="dataset2",
+            project="test-project",
+            full_path="test-project.dataset2",
+            created=None,
+            modified=None,
+            location=None,
+        )
+        table1 = TableInfo(
+            table_id="table1",
+            dataset_id="dataset1",
+            project="test-project",
+            full_path="test-project.dataset1.table1",
+            table_type="TABLE",
+        )
+        table2 = TableInfo(
+            table_id="table2",
+            dataset_id="dataset2",
+            project="test-project",
+            full_path="test-project.dataset2.table2",
+            table_type="VIEW",
+        )
+
+        mock_adapter.list_datasets.return_value = iter([dataset1, dataset2])
+
+        def list_tables_side_effect(
+            dataset_id: str, project: str
+        ) -> Iterator[TableInfo]:
+            if dataset_id == "dataset1":
+                return iter([table1])
+            return iter([table2])
+
+        mock_adapter.list_tables.side_effect = list_tables_side_effect
+
+        loader = DatasetLoader(adapter=mock_adapter)
+        loader.load_all("test-project")
+
+        result = loader.get_tables_by_dataset("dataset1")
+
+        assert len(result) == 1
+        assert table1 in result
+        assert table2 not in result

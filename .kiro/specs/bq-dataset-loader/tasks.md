@@ -97,7 +97,7 @@ Use whichever pattern fits the work breakdown:
   - 依存: タスク 4.1（ローダー初期化）の完了が必要
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 4.3 O(1) 検索機能を実装する
+- [x] 4.3 O(1) 検索機能を実装する
   - RED: データセットID検索、テーブルフルパス検索、データセット別テーブル一覧取得を検証するテストを書く
   - GREEN: get_dataset、get_table、get_tables_by_dataset メソッドと datasets、tables プロパティを実装する
   - REFACTOR: 存在しないキーへの None 返却、計算量 O(1) の動作を確認する
