@@ -48,13 +48,13 @@ Use whichever pattern fits the work breakdown:
   - REFACTOR: テーブル種別の Literal 型定義を追加し、型安全性を確保する
   - _Requirements: 2.2, 3.2_
 
-- [ ] 2.3 (P) 一括ロード結果を表現するデータ構造を実装する
+- [x] 2.3 (P) 一括ロード結果を表現するデータ構造を実装する
   - RED: 成功件数、失敗件数、テーブル総数、エラー辞書の保持を検証するテストを書く
   - GREEN: LoadResult dataclass を実装し、全テストをパスさせる
   - REFACTOR: デフォルト値とファクトリ関数を整理する
   - _Requirements: 4.4_
 
-- [ ] 2.4 (P) カスタム例外クラス階層を実装する
+- [x] 2.4 (P) カスタム例外クラス階層を実装する
   - RED: 各例外クラスのインスタンス化、継承関係、メッセージ取得を検証するテストを書く
   - GREEN: DatasetLoaderError をベースに AuthenticationError、PermissionDeniedError、DatasetNotFoundError、NetworkError を実装する
   - REFACTOR: 各例外に解決方法のガイダンスメッセージを追加する

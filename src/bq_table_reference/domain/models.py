@@ -52,3 +52,19 @@ class TableInfo(BaseModel):
     project: str
     full_path: str
     table_type: TableType
+
+
+class LoadResult(BaseModel):
+    """一括ロード処理の結果サマリーを表現するデータ構造。
+
+    Attributes:
+        datasets_success: ロード成功したデータセット数
+        datasets_failed: ロード失敗したデータセット数
+        tables_total: ロードしたテーブル総数
+        errors: 失敗したデータセットのエラー詳細（dataset_id -> エラーメッセージ）
+    """
+
+    datasets_success: int
+    datasets_failed: int
+    tables_total: int
+    errors: dict[str, str] = {}

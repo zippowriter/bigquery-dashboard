@@ -9,8 +9,8 @@ import pytest
 
 from pydantic import ValidationError
 
-from bq_table_reference.domain.models import DatasetInfo, TableInfo
-from tests.conftest import DatasetInfoData, TableInfoData
+from bq_table_reference.domain.models import DatasetInfo, LoadResult, TableInfo
+from tests.conftest import DatasetInfoData, LoadResultData, TableInfoData
 
 
 class TestDatasetInfo:
@@ -227,3 +227,84 @@ class TestTableInfo:
                 full_path="test-project.test_dataset.test_table",
                 table_type="INVALID_TYPE",  # type: ignore[arg-type]
             )
+
+
+class TestLoadResult:
+    """LoadResult dataclass のテスト。"""
+
+    def test_create_load_result_with_all_fields(
+        self, sample_load_result_data: LoadResultData
+    ) -> None:
+        """全フィールドを指定して LoadResult を生成できることを検証する。"""
+        load_result = LoadResult(**sample_load_result_data)
+
+        assert load_result.datasets_success == 5
+        assert load_result.datasets_failed == 1
+        assert load_result.tables_total == 25
+        assert load_result.errors == {"failed_dataset": "Permission denied"}
+
+    def test_create_load_result_with_empty_errors(self) -> None:
+        """errors を空辞書で LoadResult を生成できることを検証する。"""
+        load_result = LoadResult(
+            datasets_success=10,
+            datasets_failed=0,
+            tables_total=50,
+            errors={},
+        )
+
+        assert load_result.datasets_success == 10
+        assert load_result.datasets_failed == 0
+        assert load_result.tables_total == 50
+        assert load_result.errors == {}
+
+    def test_create_load_result_with_default_errors(self) -> None:
+        """errors のデフォルト値（空辞書）で LoadResult を生成できることを検証する。"""
+        load_result = LoadResult(
+            datasets_success=3,
+            datasets_failed=0,
+            tables_total=15,
+        )
+
+        assert load_result.datasets_success == 3
+        assert load_result.datasets_failed == 0
+        assert load_result.tables_total == 15
+        assert load_result.errors == {}
+
+    def test_create_load_result_with_multiple_errors(self) -> None:
+        """複数のエラーを含む LoadResult を生成できることを検証する。"""
+        errors = {
+            "dataset_a": "Permission denied",
+            "dataset_b": "Network error",
+            "dataset_c": "Dataset not found",
+        }
+        load_result = LoadResult(
+            datasets_success=2,
+            datasets_failed=3,
+            tables_total=10,
+            errors=errors,
+        )
+
+        assert load_result.datasets_failed == 3
+        assert len(load_result.errors) == 3
+        assert "dataset_a" in load_result.errors
+        assert "dataset_b" in load_result.errors
+        assert "dataset_c" in load_result.errors
+
+    def test_load_result_equality(
+        self, sample_load_result_data: LoadResultData
+    ) -> None:
+        """同じフィールド値を持つ LoadResult が等しいことを検証する。"""
+        load_result1 = LoadResult(**sample_load_result_data)
+        load_result2 = LoadResult(**sample_load_result_data)
+
+        assert load_result1 == load_result2
+
+    def test_load_result_repr(self, sample_load_result_data: LoadResultData) -> None:
+        """LoadResult の repr がクラス名とフィールドを含むことを検証する。"""
+        load_result = LoadResult(**sample_load_result_data)
+
+        repr_str = repr(load_result)
+        assert "LoadResult" in repr_str
+        assert "5" in repr_str  # datasets_success
+        assert "1" in repr_str  # datasets_failed
+        assert "25" in repr_str  # tables_total
