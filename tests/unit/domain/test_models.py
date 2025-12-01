@@ -6,6 +6,7 @@
 from datetime import datetime, timezone
 
 import pytest
+
 from pydantic import ValidationError
 
 from tests.conftest import DatasetInfoData
@@ -62,7 +63,7 @@ class TestDatasetInfo:
         dataset_info = DatasetInfo(**sample_dataset_info_data)
 
         with pytest.raises(ValidationError):
-            dataset_info.dataset_id = "new_id"  # type: ignore[misc]
+            dataset_info.dataset_id = "new_id"
 
     def test_dataset_info_equality(
         self, sample_dataset_info_data: DatasetInfoData
@@ -86,17 +87,15 @@ class TestDatasetInfo:
         # set に追加できることを確認
         # Pydantic frozen model はハッシュ可能だが pyright が認識しないため無視
         dataset_set: set[DatasetInfo] = set()
-        dataset_set.add(dataset_info)  # type: ignore[reportUnhashable]
+        dataset_set.add(dataset_info)
         assert dataset_info in dataset_set
 
         # dict のキーとして使用できることを確認
         dataset_dict: dict[DatasetInfo, str] = {}
-        dataset_dict[dataset_info] = "value"  # type: ignore[reportUnhashable]
+        dataset_dict[dataset_info] = "value"
         assert dataset_dict[dataset_info] == "value"
 
-    def test_dataset_info_repr(
-        self, sample_dataset_info_data: DatasetInfoData
-    ) -> None:
+    def test_dataset_info_repr(self, sample_dataset_info_data: DatasetInfoData) -> None:
         """DatasetInfo の repr がクラス名とフィールドを含むことを検証する。"""
         from bq_table_reference.domain.models import DatasetInfo
 
