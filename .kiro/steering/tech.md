@@ -2,18 +2,26 @@
 
 ## アーキテクチャ
 
-シンプルなCLIツールアーキテクチャ。BigQuery APIを直接呼び出し、SQLクエリでメタデータを取得・集計する。
+レイヤードアーキテクチャを採用したCLIツール。BigQuery Client Libraryを使用してメタデータを取得・集計する。
+
+**レイヤー構成**:
+- **Domain層**: Pydanticモデルによるドメインオブジェクト、カスタム例外
+- **Application層**: ユースケースの実装（DatasetLoaderなど）
+- **Infrastructure層**: BigQuery APIとの連携（BQClientAdapter）
 
 ## コア技術
 
 - **言語**: Python 3.14+
 - **パッケージ管理**: uv
-- **BigQuery連携**: Google Cloud BigQuery Client Library (予定)
+- **BigQuery連携**: Google Cloud BigQuery Client Library
 
 ## 主要ライブラリ
 
-- `google-cloud-bigquery`: BigQuery APIクライアント (導入予定)
+- `google-cloud-bigquery`: BigQuery APIクライアント
+- `pydantic`: ドメインモデル定義とバリデーション
 - `pytest`: テストフレームワーク
+- `ruff`: リンター/フォーマッター
+- `pyright`: 型チェッカー
 
 ## 開発標準
 
@@ -54,16 +62,23 @@
 
 ### 主要コマンド
 ```bash
-# 実行: uv run python main.py
-# テスト: uv run pytest
+# 実行: uv run python main.py --project <PROJECT_ID>
+# テスト: uv run task test
+# 単体テスト: uv run task test-unit
+# 統合テスト: uv run task test-integration
+# リント: uv run task lint
+# 型チェック: uv run task type-check
+# フォーマット: uv run task format
 # 依存追加: uv add <package>
 ```
 
 ## 技術的な設計判断
 
 - **uv採用**: 高速な依存解決と仮想環境管理のため
-- **INFORMATION_SCHEMA + auditlog併用**: 単一ソースでは取得できない情報を補完するため
-- **シンプルなエントリーポイント**: main.pyを起点とした単純な構造で開始
+- **レイヤードアーキテクチャ**: 責務の分離とテスト容易性の確保
+- **Pydanticモデル**: 型安全なドメインオブジェクトとバリデーション
+- **アダプターパターン**: BigQuery SDKの抽象化とモック可能な設計
+- **INFORMATION_SCHEMA + auditlog併用**: 単一ソースでは取得できない情報を補完するため（将来実装予定）
 
 ---
 _標準とパターンを文書化。全依存関係のリストではない_

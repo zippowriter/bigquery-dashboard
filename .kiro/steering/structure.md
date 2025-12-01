@@ -2,7 +2,7 @@
 
 ## 構成方針
 
-シンプルなフラット構造からスタート。機能が増加した場合は、責務ごとにモジュール分割を検討する。
+レイヤードアーキテクチャを採用。責務ごとにモジュールを分割し、依存関係の方向を制御する。
 
 ## ディレクトリパターン
 
@@ -11,11 +11,28 @@
 **目的**: プロジェクト設定ファイルとエントリーポイント
 **例**: `main.py`, `pyproject.toml`, `README.md`
 
+### ソースディレクトリ
+**場所**: `/src/bq_table_reference/`
+**目的**: メインパッケージ。レイヤードアーキテクチャで構成
+
+**レイヤー構成**:
+- `/domain/` - ドメインモデルと例外定義（ビジネスロジックの中核）
+- `/application/` - アプリケーションサービス（ユースケースの実装）
+- `/infrastructure/` - 外部システムとの連携（BigQuery APIアダプター）
+
+**依存関係の方向**:
+```
+infrastructure → application → domain
+        ↓            ↓
+      domain       domain
+```
+
 ### テストディレクトリ
 **場所**: `/tests/`
 **目的**: pytestによるテストコード
 **構成**:
 - `/tests/unit/` - 単体テスト（モック使用、高速実行）
+  - ソース構造をミラー: `unit/domain/`, `unit/application/`, `unit/infrastructure/`
 - `/tests/integration/` - 統合テスト（実環境API使用）
 **例**: `test_*.py` 形式のファイル
 
@@ -34,25 +51,30 @@
 
 ```python
 # 標準ライブラリ
-import os
+import logging
 from datetime import datetime
+from typing import Protocol
 
 # サードパーティ
 from google.cloud import bigquery
+from pydantic import BaseModel
 
-# ローカルモジュール
-from .query_builder import build_query
+# ローカルモジュール（絶対インポート）
+from bq_table_reference.domain.models import DatasetInfo
+from bq_table_reference.domain.exceptions import DatasetLoaderError
 ```
 
 **原則**:
 - 標準ライブラリ → サードパーティ → ローカルの順序
-- 相対インポートはパッケージ内部で使用
+- パッケージ内は絶対インポートを使用（`bq_table_reference.` prefix）
+- レイヤー間の依存方向を遵守（infrastructure → application → domain）
 
 ## コード構成原則
 
 - **単一責任**: 1ファイル = 1つの責務
 - **エントリーポイント**: `main.py`がCLIの起点
-- **将来の拡張**: 機能増加時は`src/`ディレクトリ導入を検討
+- **レイヤー分離**: domain は他レイヤーに依存しない
+- **アダプターパターン**: 外部APIはinfrastructure層でラップ
 
 ---
 _パターンを文書化。ファイルツリーではない。パターンに従う新規ファイルは更新不要_
