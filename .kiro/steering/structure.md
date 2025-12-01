@@ -8,8 +8,8 @@
 
 ### ルートディレクトリ
 **場所**: `/`
-**目的**: プロジェクト設定ファイルとエントリーポイント
-**例**: `main.py`, `pyproject.toml`, `README.md`
+**目的**: プロジェクト設定ファイル
+**例**: `pyproject.toml`, `README.md`, `pyrightconfig.json`
 
 ### ソースディレクトリ
 **場所**: `/src/bq_table_reference/`
@@ -72,7 +72,7 @@ from bq_table_reference.domain.exceptions import DatasetLoaderError
 ## コード構成原則
 
 - **単一責任**: 1ファイル = 1つの責務
-- **エントリーポイント**: `main.py`がCLIの起点
+- **エントリーポイント**: `/src/main.py`がCLIの起点
 - **レイヤー分離**: domain は他レイヤーに依存しない
 - **アダプターパターン**: 外部APIはinfrastructure層でラップ
 
