@@ -84,7 +84,7 @@ class DatasetLoader:
         Returns:
             DatasetInfo オブジェクトのリスト。
         """
-        return list(self._datasets.values())
+        return list[DatasetInfo](self._datasets.values())
 
     @property
     def tables(self) -> list[TableInfo]:
@@ -93,7 +93,7 @@ class DatasetLoader:
         Returns:
             TableInfo オブジェクトのリスト。
         """
-        return list(self._tables.values())
+        return list[TableInfo](self._tables.values())
 
     def load_all(
         self,
@@ -119,10 +119,10 @@ class DatasetLoader:
         errors: dict[str, str] = {}
 
         # データセット一覧を取得（リストに変換して総数を把握）
-        datasets = list(self._adapter.list_datasets(project))
+        datasets = list[DatasetInfo](self._adapter.list_datasets(project))
         total_datasets = len(datasets)
 
-        for index, dataset in enumerate(datasets, start=1):
+        for index, dataset in enumerate[DatasetInfo](datasets, start=1):
             # データセットを内部辞書に登録
             self._datasets[dataset.dataset_id] = dataset
 
@@ -132,7 +132,9 @@ class DatasetLoader:
 
             # テーブル一覧を取得
             try:
-                tables = list(self._adapter.list_tables(dataset.dataset_id, project))
+                tables = list[TableInfo](
+                    self._adapter.list_tables(dataset.dataset_id, project)
+                )
 
                 # テーブルを内部辞書に登録
                 for table in tables:
