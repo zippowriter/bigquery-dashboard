@@ -28,18 +28,19 @@
 
 ```mermaid
 graph TB
-    subgraph Application
+    subgraph Application Layer
         Main[main.py]
         DatasetLoader[DatasetLoader]
     end
 
-    subgraph Domain
+    subgraph Domain Layer
         DatasetInfo[DatasetInfo dataclass]
         TableInfo[TableInfo dataclass]
         LoadResult[LoadResult dataclass]
+        Exceptions[Exception Hierarchy]
     end
 
-    subgraph Infrastructure
+    subgraph Infrastructure Layer
         BQClientAdapter[BigQueryClientAdapter]
     end
 
@@ -55,14 +56,72 @@ graph TB
     DatasetLoader --> BQClientAdapter
     BQClientAdapter --> BigQueryAPI
     BQClientAdapter --> ADC
+    BQClientAdapter --> Exceptions
 ```
 
 **Architecture Integration**:
 - **Selected pattern**: Repository Pattern + Adapter — BigQuery SDK をラップし、ドメインオブジェクトに変換することでテスト容易性と型安全性を確保
 - **Domain/feature boundaries**: DatasetLoader がビジネスロジック（一括ロード、エラー継続）を担当、BQClientAdapter が外部API通信を担当
-- **Existing patterns preserved**: steering に定義されたシンプルなフラット構造を維持
+- **Existing patterns preserved**: steering に定義されたシンプルなフラット構造から段階的に拡張
 - **New components rationale**: dataclass によるドメインモデル定義、Adapter による SDK 抽象化
 - **Steering compliance**: Python 型ヒントの積極使用、snake_case 命名規約に準拠
+
+### Directory Structure
+
+本プロジェクトの現状は、`main.py` のみのフラット構造である。steering の方針に従い、`src/` ディレクトリを導入してモジュール分割を行う。
+
+```
+bigquery-dashboard/
+├── pyproject.toml           # プロジェクト設定
+├── main.py                  # CLIエントリーポイント
+├── README.md
+│
+├── src/                     # ソースコードルート（パッケージ）
+│   └── bq_table_reference/  # メインパッケージ
+│       ├── __init__.py      # パッケージ初期化・公開API定義
+│       │
+│       ├── domain/          # ドメイン層：ビジネスロジックとデータ構造
+│       │   ├── __init__.py
+│       │   ├── models.py    # DatasetInfo, TableInfo, LoadResult
+│       │   └── exceptions.py # カスタム例外階層
+│       │
+│       ├── infrastructure/  # インフラ層：外部サービス連携
+│       │   ├── __init__.py
+│       │   └── bq_client_adapter.py  # BigQuery SDK ラッパー
+│       │
+│       └── application/     # アプリケーション層：ユースケース実装
+│           ├── __init__.py
+│           └── dataset_loader.py  # DatasetLoader クラス
+│
+└── tests/                   # テストコード
+    ├── __init__.py
+    ├── conftest.py          # pytest フィクスチャ
+    │
+    ├── unit/                # 単体テスト
+    │   ├── __init__.py
+    │   ├── domain/
+    │   │   ├── __init__.py
+    │   │   ├── test_models.py      # DatasetInfo, TableInfo, LoadResult
+    │   │   └── test_exceptions.py   # 例外クラスのテスト
+    │   │
+    │   └── application/
+    │       ├── __init__.py
+    │       └── test_dataset_loader.py  # モック使用のローダーテスト
+    │
+    └── integration/         # 統合テスト
+        ├── __init__.py
+        ├── test_bq_client_adapter.py   # 実API使用（オプショナル）
+        └── test_dataset_loader_e2e.py  # エンドツーエンド
+```
+
+**Key Design Decisions**:
+
+| 決定事項 | 選択 | 根拠 |
+|---------|------|------|
+| src レイアウト | `src/bq_table_reference/` | PEP 517/518 推奨。インストール可能パッケージとして配布可能 |
+| パッケージ名 | `bq_table_reference` | pyproject.toml のプロジェクト名と一致、snake_case 命名規約 |
+| レイヤー分離 | domain/infrastructure/application | クリーンアーキテクチャに基づく関心の分離 |
+| テスト構造 | unit/integration 分離 | CI での実行速度最適化、統合テストの選択的実行 |
 
 ### Technology Stack
 
@@ -145,6 +204,8 @@ sequenceDiagram
 | DatasetLoader | Application | ビジネスロジックと検索機能を提供 | 3.1-3.4, 4.1-4.3 | BQClientAdapter (P0) | Service |
 
 ### Domain Layer
+
+**File**: `src/bq_table_reference/domain/models.py`
 
 #### DatasetInfo
 
@@ -247,6 +308,8 @@ class LoadResult:
 
 ---
 
+**File**: `src/bq_table_reference/domain/exceptions.py`
+
 #### DatasetLoaderError (Exception Hierarchy)
 
 | Field | Detail |
@@ -257,8 +320,6 @@ class LoadResult:
 **Responsibilities & Constraints**
 - google-api-core の例外を適切なカスタム例外に変換
 - エラーメッセージに解決方法のガイダンスを含める
-
-**Contracts**: なし（例外クラス階層）
 
 ```python
 class DatasetLoaderError(Exception):
@@ -285,6 +346,8 @@ class NetworkError(DatasetLoaderError):
 ---
 
 ### Infrastructure Layer
+
+**File**: `src/bq_table_reference/infrastructure/bq_client_adapter.py`
 
 #### BQClientAdapter
 
@@ -361,6 +424,14 @@ class BQClientAdapter:
     def close(self) -> None:
         """BigQueryクライアントをクローズする。"""
         ...
+
+    def __enter__(self) -> "BQClientAdapter":
+        """コンテキストマネージャーのエントリー。"""
+        ...
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """コンテキストマネージャーのイグジット。"""
+        ...
 ```
 
 - Preconditions: 有効な認証情報が環境に設定されていること
@@ -375,6 +446,8 @@ class BQClientAdapter:
 ---
 
 ### Application Layer
+
+**File**: `src/bq_table_reference/application/dataset_loader.py`
 
 #### DatasetLoader
 
@@ -522,6 +595,62 @@ class DatasetLoader:
 - Validation: full_path のフォーマット検証は get_table() 内で実施
 - Risks: 大規模プロジェクトでのメモリ使用量増加
 
+---
+
+### Package Initialization
+
+**File**: `src/bq_table_reference/__init__.py`
+
+```python
+"""BigQuery テーブル参照分析ツール。
+
+データセットとテーブルのメタデータを取得・管理するためのパッケージ。
+
+Examples:
+    >>> from bq_table_reference import DatasetLoader
+    >>> loader = DatasetLoader(project="my-project")
+    >>> result = loader.load_all("my-project")
+    >>> print(f"Loaded {result.datasets_success} datasets")
+"""
+
+from bq_table_reference.domain.models import (
+    DatasetInfo,
+    TableInfo,
+    LoadResult,
+    TableType,
+)
+from bq_table_reference.domain.exceptions import (
+    DatasetLoaderError,
+    AuthenticationError,
+    PermissionDeniedError,
+    DatasetNotFoundError,
+    NetworkError,
+)
+from bq_table_reference.application.dataset_loader import (
+    DatasetLoader,
+    ProgressCallback,
+)
+
+__all__ = [
+    # Domain Models
+    "DatasetInfo",
+    "TableInfo",
+    "LoadResult",
+    "TableType",
+    # Exceptions
+    "DatasetLoaderError",
+    "AuthenticationError",
+    "PermissionDeniedError",
+    "DatasetNotFoundError",
+    "NetworkError",
+    # Application
+    "DatasetLoader",
+    "ProgressCallback",
+]
+
+__version__ = "0.1.0"
+```
+
 ## Data Models
 
 ### Domain Model
@@ -612,23 +741,51 @@ BigQuery API からのエラーを適切なカスタム例外に変換し、ユ�
 
 ### Unit Tests
 
-- `test_dataset_info.py`: DatasetInfo dataclass の生成と属性アクセス
-- `test_table_info.py`: TableInfo dataclass の生成と属性アクセス
-- `test_load_result.py`: LoadResult の集計ロジック
-- `test_dataset_loader_search.py`: get_dataset(), get_table() の O(1) 検索動作
-- `test_error_mapping.py`: google-api-core 例外からカスタム例外への変換
+**Location**: `tests/unit/`
+
+- `test_models.py`: DatasetInfo, TableInfo, LoadResult dataclass の生成と属性アクセス
+- `test_exceptions.py`: 例外クラスの継承関係とメッセージ
+- `test_dataset_loader.py`: モック BQClientAdapter を使用した DatasetLoader のテスト
+  - get_dataset(), get_table() の O(1) 検索動作
+  - load_all() のエラー継続処理
 
 ### Integration Tests
 
+**Location**: `tests/integration/`
+
 - `test_bq_client_adapter.py`: 実際の BigQuery API との通信（テスト用プロジェクト使用）
-- `test_dataset_loader_load_all.py`: 一括ロード処理のエンドツーエンド動作
+- `test_dataset_loader_e2e.py`: 一括ロード処理のエンドツーエンド動作
 - `test_authentication.py`: ADC および GOOGLE_APPLICATION_CREDENTIALS による認証
 
 ### Mock Tests
 
-- `test_dataset_loader_with_mock.py`: BQClientAdapter をモック化した DatasetLoader のテスト
-- `test_error_handling.py`: 各種エラーシナリオのシミュレーション
-- `test_partial_failure.py`: 一括ロード中の部分失敗シナリオ
+- `tests/unit/application/test_dataset_loader.py`: BQClientAdapter をモック化した DatasetLoader のテスト
+- 各種エラーシナリオのシミュレーション
+- 一括ロード中の部分失敗シナリオ
+
+### Test Configuration
+
+**File**: `tests/conftest.py`
+
+```python
+import pytest
+from typing import Iterator
+
+@pytest.fixture
+def mock_adapter():
+    """モック化された BQClientAdapter を提供する。"""
+    ...
+
+@pytest.fixture
+def sample_dataset_info():
+    """テスト用 DatasetInfo インスタンスを提供する。"""
+    ...
+
+@pytest.fixture
+def sample_table_info():
+    """テスト用 TableInfo インスタンスを提供する。"""
+    ...
+```
 
 ## Security Considerations
 
