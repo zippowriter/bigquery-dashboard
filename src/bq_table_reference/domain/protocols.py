@@ -1,7 +1,7 @@
-"""Protocol definitions for domain interfaces.
+"""ドメインインターフェースのプロトコル定義。
 
-This module defines Protocol classes that establish contracts
-for data source adapters and other interfaces used in the application.
+このモジュールは、データソースアダプターや
+アプリケーションで使用されるその他のインターフェースの契約を確立するProtocolクラスを定義する。
 """
 
 from collections.abc import Callable
@@ -10,23 +10,23 @@ from typing import Protocol, runtime_checkable
 from bq_table_reference.domain.models import FilterConfig, TableAccessCount
 
 
-# Type alias for progress callback function.
-# Callbacks receive (current, total, message) for progress reporting.
+# 進捗コールバック関数の型エイリアス。
+# コールバックは進捗レポート用に(current, total, message)を受け取る。
 ProgressCallback = Callable[[int, int, str], None]
 
 
 @runtime_checkable
 class TableAccessDataSourceProtocol(Protocol):
-    """Protocol for table access data source adapters.
+    """テーブルアクセスデータソースアダプターのプロトコル。
 
-    This protocol defines the contract that data source adapters
-    (InfoSchemaAdapter, AuditLogAdapter) must implement to provide
-    table access count data.
+    このプロトコルは、テーブルアクセスカウントデータを提供するために
+    データソースアダプター（InfoSchemaAdapter、AuditLogAdapter）が
+    実装すべき契約を定義する。
 
-    Implementations should handle:
-    - Connection to the underlying data source
-    - Query execution and result parsing
-    - Error handling and appropriate exception raising
+    実装は以下を処理する必要がある:
+    - 基盤となるデータソースへの接続
+    - クエリ実行と結果のパース
+    - エラーハンドリングと適切な例外の送出
 
     Example:
         >>> class MyAdapter:
@@ -36,7 +36,7 @@ class TableAccessDataSourceProtocol(Protocol):
         ...         filter_config: FilterConfig,
         ...         progress_callback: ProgressCallback | None = None,
         ...     ) -> list[TableAccessCount]:
-        ...         # Implementation here
+        ...         # 実装をここに記述
         ...         return []
     """
 
@@ -46,24 +46,24 @@ class TableAccessDataSourceProtocol(Protocol):
         filter_config: FilterConfig,
         progress_callback: Callable[[int, int, str], None] | None = None,
     ) -> list[TableAccessCount]:
-        """Fetch table access counts from the data source.
+        """データソースからテーブルアクセスカウントを取得する。
 
         Args:
-            project_id: GCP project ID to query.
-            filter_config: Filtering conditions for the query.
-            progress_callback: Optional callback function for progress reporting.
-                Called with (current, total, message) during long-running operations.
+            project_id: クエリ対象のGCPプロジェクトID。
+            filter_config: クエリのフィルタリング条件。
+            progress_callback: 進捗レポート用のオプションのコールバック関数。
+                長時間実行操作中に(current, total, message)で呼び出される。
 
         Returns:
-            List of TableAccessCount objects representing table access statistics.
+            テーブルアクセス統計を表すTableAccessCountオブジェクトのリスト。
 
         Raises:
-            AuthenticationError: When authentication to the data source fails.
-                User should run 'gcloud auth application-default login'.
-            PermissionDeniedError: When the user lacks required permissions.
-                For INFORMATION_SCHEMA: requires 'roles/bigquery.resourceViewer'.
-                For Audit Logs: requires 'roles/logging.viewer'.
-            NetworkError: When network connectivity issues occur.
-                User should check connection and retry.
+            AuthenticationError: データソースへの認証が失敗した場合。
+                ユーザーは'gcloud auth application-default login'を実行する必要がある。
+            PermissionDeniedError: ユーザーに必要な権限がない場合。
+                INFORMATION_SCHEMAの場合: 'roles/bigquery.resourceViewer'が必要。
+                Audit Logsの場合: 'roles/logging.viewer'が必要。
+            NetworkError: ネットワーク接続の問題が発生した場合。
+                ユーザーは接続を確認してリトライする必要がある。
         """
         ...
