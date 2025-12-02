@@ -13,6 +13,8 @@
 ## Key Libraries
 
 - **google-cloud-bigquery**: BigQuery APIクライアント
+- **pandas**: データ操作・DataFrame処理
+- **plotly**: データ可視化ライブラリ（Dashに統合）
 - **pydantic**: 設定・データモデルのバリデーション
 - **dash**: Webダッシュボードフレームワーク
 

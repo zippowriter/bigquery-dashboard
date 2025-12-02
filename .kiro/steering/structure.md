@@ -25,6 +25,7 @@
   - `layout.py`: UIコンポーネント・レイアウト構築
   - `app.py`: Dashインスタンス生成
   - `server.py`: サーバー起動ロジック
+  - `bigquery_client.py`: BigQuery APIクライアント・データ取得
 
 ### Tests (`/tests/`)
 - **Location**: `/tests/unit/{module_name}`
@@ -61,7 +62,7 @@ from src.dashboard.layout import build_layout
 ## Code Organization Principles
 
 - **単一責任**: 1モジュール = 1責務
-- **依存関係**: `app.py` -> `config.py`, `layout.py`, `server.py`
+- **依存関係**: `app.py` -> `config.py`, `layout.py` -> `bigquery_client.py`
 - **テスト対応**: 各モジュールに対応するテストファイル
 - **docstring**: 全モジュール・関数にdocstring必須
 
