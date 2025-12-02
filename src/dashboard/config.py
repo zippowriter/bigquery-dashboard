@@ -1,5 +1,7 @@
 """Application configuration module."""
 
+import os
+
 from pydantic import BaseModel, Field
 
 
@@ -27,4 +29,8 @@ class AppConfig(BaseModel):
     debug: bool = Field(
         default=True,
         description="デバッグモードの有効/無効",
+    )
+    project_id: str | None = Field(
+        default_factory=lambda: os.environ.get("GOOGLE_CLOUD_PROJECT"),
+        description="BigQuery対象プロジェクトID",
     )

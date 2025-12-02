@@ -7,16 +7,16 @@ from src.dashboard.layout import build_layout
 
 
 def create_app(config: AppConfig) -> Dash:
-    """Create and initialize a Dash application instance.
+    """Dashアプリケーションインスタンスを作成・初期化する。
 
     Args:
-        config: Application configuration with title, host, port, and debug settings.
+        config: タイトル、ホスト、ポート、デバッグ設定、プロジェクトIDを含むアプリケーション設定。
 
     Returns:
-        Initialized Dash instance with layout configured.
+        レイアウト設定済みのDashインスタンス。
 
     Raises:
-        ValueError: If config is not an AppConfig instance.
+        ValueError: configがAppConfigインスタンスでない場合。
     """
     if not isinstance(config, AppConfig):
         raise ValueError(
@@ -25,6 +25,6 @@ def create_app(config: AppConfig) -> Dash:
 
     app = Dash(__name__)
     app.title = config.title
-    app.layout = build_layout()
+    app.layout = build_layout(project_id=config.project_id)
 
     return app

@@ -9,6 +9,7 @@ dependencies = [
   "google-cloud-logging>=3.11.0",
   "pydantic>=2.12.5",
   "dash>=2.18.0,<2.19.0",
+  "pandas>=2.0.0",
 ]
 
 [project.scripts]
