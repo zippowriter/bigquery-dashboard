@@ -2,7 +2,13 @@
 
 ## Architecture
 
-レイヤードアーキテクチャを採用。設定、レイアウト、サーバー実行を分離し、テスト容易性と保守性を確保。
+Clean Architecture / DDDスタイルのレイヤードアーキテクチャを採用。
+ドメイン層を中心に、インフラ層・プレゼンテーション層を分離し、テスト容易性と保守性を確保。
+
+### Layer Structure
+- **Domain**: ビジネスロジック、モデル、リポジトリインターフェース（Protocol）
+- **Infrastructure**: 外部システム連携（BigQuery API実装）
+- **Presentation**: UI・レイアウト構築（Dashコンポーネント）
 
 ## Core Technologies
 
@@ -77,9 +83,12 @@ uv run pyright
 - **Dash選択**: Plotlyエコシステム活用、Pythonのみでリアクティブダッシュボード構築
 - **Pydantic設定**: 型安全な設定管理、バリデーション自動化
 - **uv採用**: 高速なパッケージ管理、lockファイルによる再現性確保
-- **レイヤー分離**: `config`, `layout`, `server`, `app` の責務分離
+- **Clean Architecture**: domain/infra/presentationの3層分離、依存性逆転原則
+- **Protocol活用**: リポジトリインターフェースをProtocolで定義、テスト容易性向上
+- **Immutable Models**: ドメインモデルはdataclass(frozen=True)で不変オブジェクト化
 
 ---
 _Document standards and patterns, not every dependency_
 
 <!-- updated_at: 2025-12-02 -->
+<!-- sync: Clean Architecture / DDD pattern with Protocol-based repository interface -->

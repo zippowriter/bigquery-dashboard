@@ -2,8 +2,8 @@
 
 ## Organization Philosophy
 
-機能別レイヤードアーキテクチャ。`src/` 配下にドメイン別パッケージを配置し、
-各パッケージ内で責務ごとにモジュールを分割する。
+Clean Architecture / DDDスタイルのレイヤードアーキテクチャ。`src/` 配下にドメイン別パッケージを配置し、
+各パッケージ内で `domain/`, `infra/`, `presentation/` のレイヤーに分離する。
 
 ## Directory Patterns
 
@@ -20,12 +20,31 @@
 ### Dashboard Package (`/src/dashboard/`)
 - **Location**: `/src/dashboard/`
 - **Purpose**: Dashアプリケーション構成要素
-- **Structure**:
+- **Root modules**:
   - `config.py`: Pydanticモデルによるアプリ設定
-  - `layout.py`: UIコンポーネント・レイアウト構築
   - `app.py`: Dashインスタンス生成
   - `server.py`: サーバー起動ロジック
-  - `bigquery_client.py`: BigQuery APIクライアント・データ取得
+
+### Domain Layer (`/src/dashboard/domain/`)
+- **Location**: `/src/dashboard/domain/`
+- **Purpose**: ビジネスロジックとドメインモデル（外部依存なし）
+- **Structure**:
+  - `models.py`: ドメインモデル（dataclass, frozen=True）
+  - `repositories.py`: リポジトリインターフェース（Protocol）
+  - `services.py`: ビジネスロジックサービス
+
+### Infrastructure Layer (`/src/dashboard/infra/`)
+- **Location**: `/src/dashboard/infra/`
+- **Purpose**: 外部システムとの連携（リポジトリ実装）
+- **Structure**:
+  - `bigquery.py`: BigQuery APIクライアント実装
+
+### Presentation Layer (`/src/dashboard/presentation/`)
+- **Location**: `/src/dashboard/presentation/`
+- **Purpose**: UI表示・レイアウト構築
+- **Structure**:
+  - `layout.py`: レイアウトオーケストレーション
+  - `components.py`: 再利用可能なUIコンポーネント
 
 ### Tests (`/tests/`)
 - **Location**: `/tests/unit/{package}/` - 単体テスト、`/tests/integration/` - 統合テスト
@@ -63,11 +82,13 @@ from src.dashboard.layout import build_layout
 ## Code Organization Principles
 
 - **単一責任**: 1モジュール = 1責務
-- **依存関係**: `app.py` -> `config.py`, `layout.py` -> `bigquery_client.py`
-- **テスト対応**: 各モジュールに対応するテストファイル
+- **依存関係の方向**: presentation -> domain <- infra（依存性逆転）
+- **レイヤー間境界**: domainは外部依存なし、infraがdomainのProtocolを実装
+- **テスト対応**: 各モジュールに対応するテストファイル（レイヤー構造をミラー）
 - **docstring**: 全モジュール・関数にdocstring必須
 
 ---
 _Document patterns, not file trees. New files following patterns should not require updates_
 
 <!-- updated_at: 2025-12-02 -->
+<!-- sync: Clean Architecture / DDD layered structure adopted (domain/infra/presentation) -->
