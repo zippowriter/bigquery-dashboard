@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 
 class TestCreateApp:
@@ -17,13 +16,6 @@ class TestCreateApp:
         config = AppConfig()
         app = create_app(config)
         assert app.title == "BigQueryテーブル利用状況"
-
-    def test_create_app_with_invalid_config_type(self) -> None:
-        """Verify create_app raises error for invalid config type."""
-        from src.dashboard.app import create_app
-
-        with pytest.raises(ValueError):
-            create_app(None)  # type: ignore
 
     def test_create_app_passes_project_id_to_layout(self) -> None:
         """create_appがproject_idをbuild_layoutに渡すことを検証する。"""

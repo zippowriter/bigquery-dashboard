@@ -14,14 +14,7 @@ def create_app(config: AppConfig) -> Dash:
 
     Returns:
         レイアウト設定済みのDashインスタンス。
-
-    Raises:
-        ValueError: configがAppConfigインスタンスでない場合。
     """
-    if not isinstance(config, AppConfig):
-        raise ValueError(
-            f"config must be an AppConfig instance, got {type(config).__name__}"
-        )
 
     app = Dash(__name__)
     app.title = config.title
