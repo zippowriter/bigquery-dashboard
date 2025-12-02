@@ -10,8 +10,10 @@ BigQueryのテーブル利用状況を可視化するダッシュボードアプ
   - 参照回数・ユニークユーザー数の集計（INFORMATION_SCHEMA.JOBS_BY_PROJECT）
 - **可視化ダッシュボード**: Dashによるインタラクティブな利用状況表示
   - 未使用テーブルのハイライト表示（参照回数0件）
-  - ソート可能なDataTable
-- **Google Cloud連携**: BigQuery APIとの統合
+  - リーフノードテーブルのハイライト表示（下流テーブルなし）
+  - ソート可能なDataTable、リアルタイム更新ボタン
+- **Google Cloud連携**: BigQuery API・Data Lineage APIとの統合
+- **キャッシュ機構**: CSVファイルキャッシュによる起動時間短縮
 
 ## Target Use Cases
 
@@ -27,4 +29,5 @@ BigQueryのINFORMATION_SCHEMAやauditlogsから取得した情報を
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
 
-<!-- updated_at: 2025-12-02 -->
+<!-- updated_at: 2025-12-03 -->
+<!-- sync: Added leaf table detection, caching, and Data Lineage API integration -->

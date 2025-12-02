@@ -36,15 +36,18 @@ Clean Architecture / DDDスタイルのレイヤードアーキテクチャ。`s
 ### Infrastructure Layer (`/src/dashboard/infra/`)
 - **Location**: `/src/dashboard/infra/`
 - **Purpose**: 外部システムとの連携（リポジトリ実装）
-- **Structure**:
-  - `bigquery.py`: BigQuery APIクライアント実装
+- **Patterns**:
+  - API連携リポジトリ: 外部APIクライアントをラップ（例: `bigquery.py`, `lineage.py`）
+  - キャッシュリポジトリ: ローカルファイルキャッシュ（例: `csv_cache.py`）
+  - 複合リポジトリ: 複数リポジトリを組み合わせたデコレータパターン（例: `cached_repository.py`）
 
 ### Presentation Layer (`/src/dashboard/presentation/`)
 - **Location**: `/src/dashboard/presentation/`
 - **Purpose**: UI表示・レイアウト構築
-- **Structure**:
-  - `layout.py`: レイアウトオーケストレーション
-  - `components.py`: 再利用可能なUIコンポーネント
+- **Patterns**:
+  - `layout.py`: レイアウトオーケストレーション（Dash Layoutの構築）
+  - `components.py`: 再利用可能なUIコンポーネント（関数ベース）
+  - `callbacks.py`: インタラクティブ機能のコールバック定義（register_callbacks関数で登録）
 
 ### Tests (`/tests/`)
 - **Location**: `/tests/unit/{package}/` - 単体テスト、`/tests/integration/` - 統合テスト
@@ -90,5 +93,5 @@ from src.dashboard.layout import build_layout
 ---
 _Document patterns, not file trees. New files following patterns should not require updates_
 
-<!-- updated_at: 2025-12-02 -->
-<!-- sync: Clean Architecture / DDD layered structure adopted (domain/infra/presentation) -->
+<!-- updated_at: 2025-12-03 -->
+<!-- sync: Updated infra patterns (cache/composite), added presentation callback pattern -->

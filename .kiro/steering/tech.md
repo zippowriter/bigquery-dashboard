@@ -19,6 +19,7 @@ Clean Architecture / DDDスタイルのレイヤードアーキテクチャを�
 ## Key Libraries
 
 - **google-cloud-bigquery**: BigQuery APIクライアント
+- **google-cloud-datacatalog-lineage**: Data Lineage APIクライアント
 - **pandas**: データ操作・DataFrame処理
 - **plotly**: データ可視化ライブラリ（Dashに統合）
 - **pydantic**: 設定・データモデルのバリデーション
@@ -86,9 +87,11 @@ uv run pyright
 - **Clean Architecture**: domain/infra/presentationの3層分離、依存性逆転原則
 - **Protocol活用**: リポジトリインターフェースをProtocolで定義、テスト容易性向上
 - **Immutable Models**: ドメインモデルはdataclass(frozen=True)で不変オブジェクト化
+- **キャッシュ戦略**: CSVファイルベースのキャッシュでBigQuery APIコスト・起動時間削減
+- **コールバック分離**: Dashコールバックを独立モジュールで管理、register_callbacksパターン
 
 ---
 _Document standards and patterns, not every dependency_
 
-<!-- updated_at: 2025-12-02 -->
-<!-- sync: Clean Architecture / DDD pattern with Protocol-based repository interface -->
+<!-- updated_at: 2025-12-03 -->
+<!-- sync: Added Data Lineage API, CSV caching strategy, callback separation pattern -->
