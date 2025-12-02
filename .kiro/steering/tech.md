@@ -11,13 +11,15 @@
 
 ## コア技術
 
-- **言語**: Python 3.14+
+- **言語**: Python 3.13
 - **パッケージ管理**: uv
 - **BigQuery連携**: Google Cloud BigQuery Client Library
+- **Cloud Logging連携**: Google Cloud Logging Client Library（Audit Log取得用）
 
 ## 主要ライブラリ
 
 - `google-cloud-bigquery`: BigQuery APIクライアント
+- `google-cloud-logging`: Cloud Logging APIクライアント（Audit Log取得）
 - `pydantic`: ドメインモデル定義とバリデーション
 - `pytest`: テストフレームワーク
 - `ruff`: リンター/フォーマッター
@@ -82,7 +84,11 @@
 - **レイヤードアーキテクチャ**: 責務の分離とテスト容易性の確保
 - **Pydanticモデル**: 型安全なドメインオブジェクトとバリデーション
 - **アダプターパターン**: BigQuery SDKの抽象化とモック可能な設計
-- **INFORMATION_SCHEMA + auditlog併用**: 単一ソースでは取得できない情報を補完するため（将来実装予定）
+- **INFORMATION_SCHEMA + auditlog併用**: 単一ソースでは取得できない情報を補完するため
+- **Protocol**: 依存性逆転のためのProtocolパターン（TypedProtocol使用）
+- **進捗・エラーハンドリング**: コールバックベースの進捗報告と集中エラーハンドリング
 
 ---
+_updated_at: 2025-12-02_
+_変更: Python版を3.13に修正、google-cloud-loggingを追加、実装済み機能の反映_
 _標準とパターンを文書化。全依存関係のリストではない_

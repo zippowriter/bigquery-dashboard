@@ -16,9 +16,9 @@
 **目的**: メインパッケージ。レイヤードアーキテクチャで構成
 
 **レイヤー構成**:
-- `/domain/` - ドメインモデルと例外定義（ビジネスロジックの中核）
-- `/application/` - アプリケーションサービス（ユースケースの実装）
-- `/infrastructure/` - 外部システムとの連携（BigQuery APIアダプター）
+- `/domain/` - ドメインモデル、例外定義、Protocolインターフェース（ビジネスロジックの中核）
+- `/application/` - アプリケーションサービス（ユースケースの実装、進捗管理、エラーハンドリング）
+- `/infrastructure/` - 外部システムとの連携（BigQuery/Cloud Logging APIアダプター、出力フォーマッター）
 
 **依存関係の方向**:
 ```
@@ -77,4 +77,6 @@ from bq_table_reference.domain.exceptions import DatasetLoaderError
 - **アダプターパターン**: 外部APIはinfrastructure層でラップ
 
 ---
+_updated_at: 2025-12-02_
+_変更: レイヤー構成の説明を拡充（Protocol、進捗管理、エラーハンドリング、出力フォーマッター）_
 _パターンを文書化。ファイルツリーではない。パターンに従う新規ファイルは更新不要_
