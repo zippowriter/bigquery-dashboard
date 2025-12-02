@@ -28,12 +28,14 @@ class TableUsage:
         table_id: テーブルID
         reference_count: 参照回数
         unique_users: ユニーク参照ユーザー数
+        is_leaf: リーフノード（下流テーブルが存在しない）かどうか
     """
 
     dataset_id: str
     table_id: str
     reference_count: int
     unique_users: int
+    is_leaf: bool = False
 
     @property
     def is_unused(self) -> bool:

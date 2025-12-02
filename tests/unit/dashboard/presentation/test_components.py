@@ -22,7 +22,7 @@ class TestCreateUsageDataTable:
         assert isinstance(result, dash_table.DataTable)
 
     def test_datatable_has_correct_columns(self) -> None:
-        """DataTableに4つのカラムが設定されていることを検証する。"""
+        """DataTableに5つのカラムが設定されていることを検証する。"""
         usages = [
             TableUsage(dataset_id="ds1", table_id="t1", reference_count=10, unique_users=3),
         ]
@@ -35,6 +35,7 @@ class TestCreateUsageDataTable:
             "table_id",
             "reference_count",
             "unique_users",
+            "is_leaf",
         ]
 
     def test_datatable_has_japanese_column_names(self) -> None:
@@ -50,6 +51,7 @@ class TestCreateUsageDataTable:
         assert "テーブルID" in column_names
         assert "参照回数" in column_names
         assert "参照ユーザー数" in column_names
+        assert "リーフ" in column_names
 
     def test_datatable_has_native_sort_enabled(self) -> None:
         """DataTableのネイティブソートが有効になっていることを検証する。"""
@@ -96,3 +98,37 @@ class TestCreateErrorMessage:
         result = create_error_message("テストエラー")
 
         assert "テストエラー" in str(result)
+
+
+class TestDataTableIsLeafColumn:
+    """is_leaf列関連のテスト。"""
+
+    def test_is_leaf_column_shows_checkmark_for_leaf_tables(self) -> None:
+        """リーフテーブルの行に✓が表示されることを検証する。"""
+        usages = [
+            TableUsage(
+                dataset_id="ds1", table_id="t1", reference_count=10, unique_users=3, is_leaf=True
+            ),
+        ]
+
+        result = create_usage_datatable(usages)
+
+        data: list[dict[str, str | int]] = result.data  # pyright: ignore[reportAttributeAccessIssue,reportUnknownVariableType]
+        assert data[0]["is_leaf"] == "✓"
+
+    def test_is_leaf_column_shows_empty_for_non_leaf_tables(self) -> None:
+        """非リーフテーブルの行は空欄になることを検証する。"""
+        usages = [
+            TableUsage(
+                dataset_id="ds1",
+                table_id="t1",
+                reference_count=10,
+                unique_users=3,
+                is_leaf=False,
+            ),
+        ]
+
+        result = create_usage_datatable(usages)
+
+        data: list[dict[str, str | int]] = result.data  # pyright: ignore[reportAttributeAccessIssue,reportUnknownVariableType]
+        assert data[0]["is_leaf"] == ""

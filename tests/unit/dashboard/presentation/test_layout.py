@@ -7,6 +7,33 @@ from src.dashboard.domain.models import TableInfo, TableUsage
 from src.dashboard.presentation.layout import build_data_content, build_layout
 
 
+class FakeLineageRepository:
+    """テスト用のFake LineageRepository。
+
+    常に全テーブルをリーフとして返す軽量なテスト用実装。
+    """
+
+    def __init__(self, leaf_fqns: set[str] | None = None) -> None:
+        """Fakeリポジトリを初期化する。
+
+        Args:
+            leaf_fqns: リーフとして返すFQNセット。Noneの場合は全テーブルをリーフとして返す。
+        """
+        self._leaf_fqns = leaf_fqns
+
+    def get_leaf_tables(
+        self,
+        project_id: str,
+        location: str,
+        table_fqns: list[str],
+    ) -> set[str]:
+        """リーフテーブルを返却する。"""
+        if self._leaf_fqns is not None:
+            return self._leaf_fqns
+        # デフォルトでは全テーブルをリーフとして返す
+        return set(table_fqns)
+
+
 class FakeTableRepository:
     """テスト用のFakeリポジトリ。
 
@@ -71,8 +98,13 @@ class TestBuildLayout:
                 TableUsage(dataset_id="ds1", table_id="t1", reference_count=10, unique_users=3)
             ],
         )
+        fake_lineage_repo = FakeLineageRepository()
 
-        layout = build_layout(project_id="test-project", repository=fake_repo)
+        layout = build_layout(
+            project_id="test-project",
+            repository=fake_repo,
+            lineage_repository=fake_lineage_repo,
+        )
 
         assert isinstance(layout, html.Div)
 
@@ -87,8 +119,13 @@ class TestBuildLayout:
                 TableUsage(dataset_id="ds1", table_id="t1", reference_count=10, unique_users=3),
             ],
         )
+        fake_lineage_repo = FakeLineageRepository()
 
-        layout = build_layout(project_id="test-project", repository=fake_repo)
+        layout = build_layout(
+            project_id="test-project",
+            repository=fake_repo,
+            lineage_repository=fake_lineage_repo,
+        )
 
         assert isinstance(layout, html.Div)
         layout_str = str(layout)
@@ -114,8 +151,11 @@ class TestBuildDataContent:
                 TableUsage(dataset_id="ds1", table_id="t1", reference_count=10, unique_users=3)
             ],
         )
+        fake_lineage_repo = FakeLineageRepository()
 
-        content = build_data_content("test-project", "region-us", fake_repo)
+        content = build_data_content(
+            "test-project", "region-us", fake_repo, fake_lineage_repo
+        )
 
         content_str = str(content)
         assert "DataTable" in content_str or "usage-table" in content_str
@@ -125,8 +165,11 @@ class TestBuildDataContent:
         fake_repo = FakeTableRepository(
             raise_error=GoogleAPIError("API Error"),
         )
+        fake_lineage_repo = FakeLineageRepository()
 
-        content = build_data_content("test-project", "region-us", fake_repo)
+        content = build_data_content(
+            "test-project", "region-us", fake_repo, fake_lineage_repo
+        )
 
         content_str = str(content)
         assert "エラー" in content_str or "Error" in content_str
@@ -134,8 +177,11 @@ class TestBuildDataContent:
     def test_shows_empty_message_when_no_tables(self) -> None:
         """テーブル情報が0件の場合にメッセージを返却することを検証する。"""
         fake_repo = FakeTableRepository(tables=[], usage_stats=[])
+        fake_lineage_repo = FakeLineageRepository()
 
-        content = build_data_content("test-project", "region-us", fake_repo)
+        content = build_data_content(
+            "test-project", "region-us", fake_repo, fake_lineage_repo
+        )
 
         content_str = str(content)
         assert "存在しません" in content_str or "テーブルが" in content_str

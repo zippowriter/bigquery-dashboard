@@ -51,3 +51,36 @@ class TableUsageService:
                     )
                 )
         return result
+
+    @staticmethod
+    def merge_with_leaf_info(
+        usages: list[TableUsage],
+        leaf_fqns: set[str],
+        project_id: str,
+    ) -> list[TableUsage]:
+        """利用統計にリーフノード情報を付与する。
+
+        各テーブルの完全修飾名をleaf_fqnsと照合し、
+        リーフノードかどうかの情報を付与した新しいリストを返す。
+
+        Args:
+            usages: テーブル利用統計リスト
+            leaf_fqns: リーフテーブルのFQNセット（bigquery:project.dataset.table形式）
+            project_id: BigQueryプロジェクトID
+
+        Returns:
+            is_leafフラグが設定されたTableUsageリスト
+        """
+        result: list[TableUsage] = []
+        for u in usages:
+            fqn = f"bigquery:{project_id}.{u.dataset_id}.{u.table_id}"
+            result.append(
+                TableUsage(
+                    dataset_id=u.dataset_id,
+                    table_id=u.table_id,
+                    reference_count=u.reference_count,
+                    unique_users=u.unique_users,
+                    is_leaf=fqn in leaf_fqns,
+                )
+            )
+        return result

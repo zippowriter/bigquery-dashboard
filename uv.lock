@@ -18,6 +18,7 @@ source = { editable = "." }
 dependencies = [
     { name = "dash" },
     { name = "google-cloud-bigquery" },
+    { name = "google-cloud-datacatalog-lineage" },
     { name = "google-cloud-logging" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -35,6 +36,7 @@ dev = [
 requires-dist = [
     { name = "dash", specifier = ">=2.18.0,<2.19.0" },
     { name = "google-cloud-bigquery", specifier = ">=3.0.0" },
+    { name = "google-cloud-datacatalog-lineage", specifier = ">=0.4.0" },
     { name = "google-cloud-logging", specifier = ">=3.11.0" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
@@ -281,6 +283,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a6/03/ef0bc99d0e0faf4fdbe67ac445e18cdaa74824fd93cd069e7bb6548cb52d/google_cloud_core-2.5.0.tar.gz", hash = "sha256:7c1b7ef5c92311717bd05301aa1a91ffbc565673d3b0b4163a52d8413a186963", size = 36027, upload-time = "2025-10-29T23:17:39.513Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/20/bfa472e327c8edee00f04beecc80baeddd2ab33ee0e86fd7654da49d45e9/google_cloud_core-2.5.0-py3-none-any.whl", hash = "sha256:67d977b41ae6c7211ee830c7912e41003ea8194bff15ae7d72fd6f51e57acabc", size = 29469, upload-time = "2025-10-29T23:17:38.548Z" },
+]
+
+[[package]]
+name = "google-cloud-datacatalog-lineage"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b5/ab/35ec550744b5fda92fd150a29cda523ddd90956e7cfd045d63412ef18933/google_cloud_datacatalog_lineage-0.4.0.tar.gz", hash = "sha256:530836f6925dbeb830ddb131a10f8de09538981080304a5b4443e7f725ab7097", size = 105963, upload-time = "2025-10-17T02:34:24.126Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/b2/60dc926ef39d21076fd4509d5c5ed2174dafa2bbf7bd6e4114eee76592b5/google_cloud_datacatalog_lineage-0.4.0-py3-none-any.whl", hash = "sha256:126a44e77465cea3c7698aca2d955f48977d29e2f3a298baedb210825e29b2dc", size = 80919, upload-time = "2025-10-17T02:32:23.176Z" },
 ]
 
 [[package]]

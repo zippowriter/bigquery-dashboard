@@ -27,3 +27,26 @@ class TestTableUsage:
         )
 
         assert usage.is_unused is False
+
+    def test_is_leaf_defaults_to_false(self) -> None:
+        """is_leafのデフォルト値がFalseであることを検証する。"""
+        usage = TableUsage(
+            dataset_id="ds1",
+            table_id="t1",
+            reference_count=10,
+            unique_users=3,
+        )
+
+        assert usage.is_leaf is False
+
+    def test_is_leaf_can_be_set_to_true(self) -> None:
+        """is_leafにTrueを設定できることを検証する。"""
+        usage = TableUsage(
+            dataset_id="ds1",
+            table_id="t1",
+            reference_count=10,
+            unique_users=3,
+            is_leaf=True,
+        )
+
+        assert usage.is_leaf is True

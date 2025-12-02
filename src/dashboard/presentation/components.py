@@ -26,6 +26,7 @@ def create_usage_datatable(usages: list[TableUsage]) -> dash_table.DataTable:
             "table_id": u.table_id,
             "reference_count": u.reference_count,
             "unique_users": u.unique_users,
+            "is_leaf": "✓" if u.is_leaf else "",
         }
         for u in usages
     ]
@@ -37,6 +38,7 @@ def create_usage_datatable(usages: list[TableUsage]) -> dash_table.DataTable:
             {"name": "テーブルID", "id": "table_id"},
             {"name": "参照回数", "id": "reference_count"},
             {"name": "参照ユーザー数", "id": "unique_users"},
+            {"name": "リーフ", "id": "is_leaf"},
         ],
         data=data,
         sort_action="native",
