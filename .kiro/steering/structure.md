@@ -27,7 +27,7 @@
   - `server.py`: サーバー起動ロジック
 
 ### Tests (`/tests/`)
-- **Location**: `/tests/unit/`
+- **Location**: `/tests/unit/{module_name}`
 - **Purpose**: テストコード配置
 - **Naming**: `test_{module}.py` パターン
 
