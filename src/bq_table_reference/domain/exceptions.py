@@ -82,3 +82,44 @@ class NetworkError(DatasetLoaderError):
                 "retry してください。"
             )
         super().__init__(message)
+
+
+class AuditLogNotEnabledError(DatasetLoaderError):
+    """Data Access Audit Log が有効化されていない場合に発生する例外。
+
+    BigQuery Data Access ログが有効化されていない場合に発生する。
+    """
+
+    def __init__(self, message: str | None = None) -> None:
+        """AuditLogNotEnabledError を初期化する。
+
+        Args:
+            message: エラーメッセージ。None の場合はデフォルトメッセージを使用。
+        """
+        if message is None:
+            message = (
+                "BigQuery Data Access ログが有効化されていません。"
+                "Cloud Console > IAM & Admin > Audit Logs から "
+                "BigQuery の Data Read を有効化してください。"
+            )
+        super().__init__(message)
+
+
+class QueryTimeoutError(DatasetLoaderError):
+    """クエリがタイムアウトした場合に発生する例外。
+
+    BigQuery クエリの実行がタイムアウトした場合に発生する。
+    """
+
+    def __init__(self, message: str | None = None) -> None:
+        """QueryTimeoutError を初期化する。
+
+        Args:
+            message: エラーメッセージ。None の場合はデフォルトメッセージを使用。
+        """
+        if message is None:
+            message = (
+                "クエリがタイムアウトしました。--timeout オプションで "
+                "タイムアウト時間を延長するか、期間を短くしてください。"
+            )
+        super().__init__(message)

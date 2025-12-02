@@ -10,13 +10,13 @@
 
 ### Task 1: ドメインモデルの定義（外部依存なし・テスト容易性: 高）
 
-- [ ] 1.1 DataSource列挙型を定義する
+- [x] 1.1 DataSource列挙型を定義する
   - **RED**: DataSource.INFORMATION_SCHEMAとDataSource.AUDIT_LOGが存在することを検証するテストを書く
   - **GREEN**: StrEnumを継承したDataSource列挙型を作成する
   - **REFACTORING**: 必要に応じてdocstringを追加
   - _Requirements: 1.3, 2.3_
 
-- [ ] 1.2 TableAccessCountモデルを定義する
+- [x] 1.2 TableAccessCountモデルを定義する
   - **RED**: project_id, dataset_id, table_id, count, sourceを持つモデルの生成テストを書く
   - **RED**: full_pathプロパティが「project.dataset.table」形式を返すテストを書く
   - **RED**: イミュータブル（frozen=True）であることを検証するテストを書く
@@ -25,7 +25,7 @@
   - **REFACTORING**: フィールドのバリデーションルールを整理
   - _Requirements: 1.3, 2.3, 3.1, 4.5_
 
-- [ ] 1.3 FilterConfigモデルを定義する
+- [x] 1.3 FilterConfigモデルを定義する
   - **RED**: デフォルト値（days=30）が設定されることを検証するテストを書く
   - **RED**: start_date/end_dateの明示指定が機能することを検証するテストを書く
   - **RED**: dataset_filter, table_pattern, min_countのフィルタ設定テストを書く
@@ -34,7 +34,7 @@
   - **REFACTORING**: バリデーションロジックをプライベートメソッドに抽出
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 1.4 TableAccessResultモデルを定義する
+- [x] 1.4 TableAccessResultモデルを定義する
   - **RED**: project_id, start_date, end_dateを保持することを検証するテストを書く
   - **RED**: info_schema_results, audit_log_results, merged_resultsを個別に保持するテストを書く
   - **RED**: warningsリストを保持し、追加できることを検証するテストを書く
@@ -42,7 +42,7 @@
   - **REFACTORING**: 結果アクセス用のヘルパープロパティを追加
   - _Requirements: 3.1, 3.2, 4.1_
 
-- [ ] 1.5 例外クラスを定義する
+- [x] 1.5 例外クラスを定義する
   - **RED**: AuditLogNotEnabledErrorが有効化手順メッセージを含むことを検証するテストを書く
   - **RED**: QueryTimeoutErrorがタイムアウト調整方法を含むことを検証するテストを書く
   - **RED**: PermissionDeniedErrorが必要な権限情報を含むことを検証するテストを書く
