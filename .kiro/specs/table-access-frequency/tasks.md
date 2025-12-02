@@ -52,7 +52,7 @@
 
 ### Task 2: 出力フォーマッターの実装（I/Oのみ・テスト容易性: 高）
 
-- [ ] 2.1 ConsoleFormatterを実装する
+- [x] 2.1 ConsoleFormatterを実装する
   - **RED**: TableAccessResultを受け取り、表形式の文字列を返すテストを書く
   - **RED**: 参照回数の降順でソートされていることを検証するテストを書く
   - **RED**: project_id, dataset, table, count, sourceの各カラムが含まれることを検証するテストを書く
@@ -61,7 +61,7 @@
   - **REFACTORING**: 表のフォーマット処理をヘルパーメソッドに抽出
   - _Requirements: 4.1, 4.2, 4.5_
 
-- [ ] 2.2 CsvFormatterを実装する
+- [x] 2.2 CsvFormatterを実装する
   - **RED**: TableAccessResultをCSV形式の文字列に変換するテストを書く
   - **RED**: ヘッダー行が正しいカラム名を含むことを検証するテストを書く
   - **RED**: ファイルパスを指定して書き出せることを検証するテストを書く
@@ -70,7 +70,7 @@
   - **REFACTORING**: csvモジュールを使用した実装に統一
   - _Requirements: 4.3, 4.5_
 
-- [ ] 2.3 JsonFormatterを実装する
+- [x] 2.3 JsonFormatterを実装する
   - **RED**: TableAccessResultをJSON形式の文字列に変換するテストを書く
   - **RED**: 集計期間、project_id、warnings、table_accessesを含むことを検証するテストを書く
   - **RED**: ファイルパスを指定して書き出せることを検証するテストを書く
@@ -78,7 +78,7 @@
   - **REFACTORING**: Pydanticのmodel_dump()を活用してシリアライズを簡潔化
   - _Requirements: 4.4, 4.5_
 
-- [ ] 2.4 OutputFormatterProtocolを定義する
+- [x] 2.4 OutputFormatterProtocolを定義する
   - **RED**: format(result: TableAccessResult) -> strのシグネチャを持つことを検証
   - **GREEN**: Protocolクラスを定義する
   - **REFACTORING**: 各フォーマッターがProtocolを満たすことを型チェックで確認
@@ -86,7 +86,7 @@
 
 ### Task 3: データソースProtocolの定義（インターフェース定義・テスト容易性: 高）
 
-- [ ] 3.1 TableAccessDataSourceProtocolを定義する
+- [x] 3.1 TableAccessDataSourceProtocolを定義する
   - **RED**: fetch_table_access()メソッドのシグネチャテストを書く（Protocol準拠確認）
   - **RED**: 引数（project_id, filter_config, progress_callback）の型を検証するテストを書く
   - **RED**: 戻り値がlist[TableAccessCount]であることを検証するテストを書く
@@ -97,7 +97,7 @@
 
 ### Task 4: 集計ユースケースの実装（アダプターをモック可能・テスト容易性: 中〜高）
 
-- [ ] 4.1 結果マージロジックを実装する
+- [x] 4.1 結果マージロジックを実装する
   - **RED**: 2つのTableAccessCountリストをマージするテストを書く
   - **RED**: 同一テーブル（project, dataset, table一致）を識別するテストを書く
   - **RED**: 重複テーブルは最大値を採用することを検証するテストを書く
@@ -106,7 +106,7 @@
   - **REFACTORING**: 集計ロジックをitertools/collectionsを活用して簡潔化
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 4.2 TableAccessCounterユースケースを実装する
+- [x] 4.2 TableAccessCounterユースケースを実装する
   - **RED**: DataSourceOption.INFO_SCHEMA指定時、info_schemaアダプターのみ呼ばれるテストを書く
   - **RED**: DataSourceOption.AUDIT_LOG指定時、audit_logアダプターのみ呼ばれるテストを書く
   - **RED**: DataSourceOption.BOTH指定時、両アダプターが呼ばれるテストを書く
@@ -115,7 +115,7 @@
   - **REFACTORING**: 並行取得のためのasyncio対応を検討
   - _Requirements: 3.4, 3.5, 6.5_
 
-- [ ] 4.3 フィルタリング適用ロジックを実装する
+- [x] 4.3 フィルタリング適用ロジックを実装する
   - **RED**: min_count指定時、閾値未満の結果を除外するテストを書く
   - **RED**: FilterConfigがアダプターに正しく渡されることを検証するテストを書く
   - **RED**: 期間が180日を超える場合、warningsに警告が追加されるテストを書く
@@ -125,7 +125,7 @@
 
 ### Task 5: INFORMATION_SCHEMAアダプターの実装（BigQueryモック必要・テスト容易性: 中）
 
-- [ ] 5.1 SQLクエリ生成ロジックを実装する
+- [x] 5.1 SQLクエリ生成ロジックを実装する
   - **RED**: 基本クエリがJOBS_BY_PROJECTとUNNEST(referenced_tables)を含むテストを書く
   - **RED**: 期間フィルタ（creation_time）がWHERE句に反映されるテストを書く
   - **RED**: データセットフィルタがWHERE句に反映されるテストを書く
@@ -134,7 +134,7 @@
   - **REFACTORING**: SQLテンプレートを定数として分離
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 5.2 クエリ結果のパースロジックを実装する
+- [x] 5.2 クエリ結果のパースロジックを実装する
   - **RED**: BigQueryの行データをTableAccessCountに変換するテストを書く（モックデータ使用）
   - **RED**: 集計（GROUP BY）が正しく行われることを検証するテストを書く
   - **RED**: 進捗コールバックが呼び出されることを検証するテストを書く
@@ -142,14 +142,14 @@
   - **REFACTORING**: 行変換ロジックをプライベートメソッドに抽出
   - _Requirements: 1.2, 1.3_
 
-- [ ] 5.3 InfoSchemaAdapterクラスを実装する
+- [x] 5.3 InfoSchemaAdapterクラスを実装する
   - **RED**: fetch_table_access()がTableAccessDataSourceProtocolを満たすテストを書く
   - **RED**: BigQuery Clientを使用してクエリを実行することを検証するテスト（モック）を書く
   - **GREEN**: InfoSchemaAdapterクラスを実装し、BigQuery Clientを受け取る
   - **REFACTORING**: クライアント生成をファクトリメソッドに分離
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 5.4 INFORMATION_SCHEMAのエラーハンドリングを実装する
+- [x] 5.4 INFORMATION_SCHEMAのエラーハンドリングを実装する
   - **RED**: 403エラー時にPermissionDeniedErrorを送出するテストを書く
   - **RED**: エラーメッセージにroles/bigquery.resourceViewerが含まれることを検証するテストを書く
   - **RED**: タイムアウト時にQueryTimeoutErrorを送出するテストを書く
@@ -159,14 +159,14 @@
 
 ### Task 6: Cloud Audit Logsアダプターの実装（Cloud Loggingモック必要・テスト容易性: 中）
 
-- [ ] 6.1 google-cloud-loggingライブラリを追加する
+- [x] 6.1 google-cloud-loggingライブラリを追加する
   - **RED**: importが成功することを検証するテストを書く
   - **GREEN**: pyproject.tomlにgoogle-cloud-logging>=3.11.0を追加する
   - **GREEN**: uv lockを実行して依存関係を更新する
   - **REFACTORING**: 不要な依存がないか確認
   - _Requirements: 2.1_
 
-- [ ] 6.2 ログフィルタ生成ロジックを実装する
+- [x] 6.2 ログフィルタ生成ロジックを実装する
   - **RED**: resource.type="bigquery_dataset"が含まれるテストを書く
   - **RED**: protoPayload.methodName="tableDataRead"が含まれるテストを書く
   - **RED**: timestamp範囲フィルタが正しく生成されるテストを書く
@@ -174,7 +174,7 @@
   - **REFACTORING**: フィルタ文字列のエスケープ処理を共通化
   - _Requirements: 2.1, 2.2_
 
-- [ ] 6.3 ログエントリのパースロジックを実装する
+- [x] 6.3 ログエントリのパースロジックを実装する
   - **RED**: protoPayload.resourceNameからproject/dataset/tableを抽出するテストを書く
   - **RED**: パース失敗時にスキップして継続することを検証するテストを書く
   - **RED**: 集計（テーブル単位のカウント）が正しく行われるテストを書く
@@ -182,7 +182,7 @@
   - **REFACTORING**: 正規表現パターンを定数化
   - _Requirements: 2.2, 2.3_
 
-- [ ] 6.4 AuditLogAdapterクラスを実装する
+- [x] 6.4 AuditLogAdapterクラスを実装する
   - **RED**: fetch_table_access()がTableAccessDataSourceProtocolを満たすテストを書く
   - **RED**: ページネーションが正しく処理されることを検証するテスト（モック）を書く
   - **RED**: 進捗コールバックが各ページ処理後に呼び出されることを検証するテストを書く
@@ -190,7 +190,7 @@
   - **REFACTORING**: ページネーション処理をジェネレータに変換
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 6.5 Audit Logのエラーハンドリングを実装する
+- [x] 6.5 Audit Logのエラーハンドリングを実装する
   - **RED**: 403エラー時にPermissionDeniedErrorを送出するテストを書く
   - **RED**: ログが0件の場合にAuditLogNotEnabledErrorの可能性を警告するテストを書く
   - **RED**: レート制限時にバックオフリトライすることを検証するテストを書く
