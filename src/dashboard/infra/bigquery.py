@@ -3,6 +3,7 @@
 BigQuery APIを使用してテーブル情報と利用統計を取得する。
 """
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from google.cloud import bigquery
@@ -14,7 +15,27 @@ class BigQueryTableRepository:
     """BigQuery実装のテーブルリポジトリ。
 
     BigQuery APIを使用してテーブル情報と利用統計を取得する。
+    クライアントはシングルトンとして再利用される。
     """
+
+    _client: bigquery.Client | None = None
+    _project_id: str | None = None
+
+    def _get_client(self, project_id: str) -> bigquery.Client:
+        """BigQueryクライアントを取得する。
+
+        同じプロジェクトIDの場合はキャッシュされたクライアントを再利用する。
+
+        Args:
+            project_id: GCPプロジェクトID
+
+        Returns:
+            BigQueryクライアント
+        """
+        if self._client is None or self._project_id != project_id:
+            BigQueryTableRepository._client = bigquery.Client(project=project_id)
+            BigQueryTableRepository._project_id = project_id
+        return self._client  # pyright: ignore[reportReturnType]
 
     def fetch_tables(self, project_id: str) -> list[TableInfo]:
         """プロジェクト内の全テーブル一覧を取得する。
@@ -32,20 +53,40 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
-        client = bigquery.Client(project=project_id)
+        client = self._get_client(project_id)
+
+        # 全データセットを取得
+        # google-cloud-bigqueryライブラリの型定義が不完全なためpyright ignoreを使用
+        datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
+
+        if not datasets:
+            return []
 
         tables: list[TableInfo] = []
 
-        # 全データセットを取得し、各データセット内のテーブルを収集
-        # google-cloud-bigqueryライブラリの型定義が不完全なためpyright ignoreを使用
-        for dataset in client.list_datasets():  # pyright: ignore[reportUnknownVariableType]
-            for table in client.list_tables(dataset.dataset_id):  # pyright: ignore[reportUnknownVariableType]
-                tables.append(
+        def fetch_tables_for_dataset(dataset_id: str) -> list[TableInfo]:
+            """1データセットのテーブル一覧を取得する。"""
+            result: list[TableInfo] = []
+            for table in client.list_tables(dataset_id):  # pyright: ignore[reportUnknownVariableType]
+                result.append(
                     TableInfo(
                         dataset_id=str(table.dataset_id),
                         table_id=str(table.table_id),
                     )
                 )
+            return result
+
+        # データセット数に応じてワーカー数を調整（最大10）
+        max_workers = min(len(datasets), 10)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_dataset = {  # pyright: ignore[reportUnknownVariableType]
+                executor.submit(fetch_tables_for_dataset, ds.dataset_id): ds.dataset_id  # pyright: ignore[reportUnknownMemberType]
+                for ds in datasets  # pyright: ignore[reportUnknownVariableType]
+            }
+
+            for future in as_completed(future_to_dataset):
+                tables.extend(future.result())
 
         return tables
 
@@ -69,7 +110,7 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
-        client = bigquery.Client(project=project_id)
+        client = self._get_client(project_id)
 
         query = f"""
             SELECT
@@ -110,3 +151,24 @@ class BigQueryTableRepository:
             )
 
         return usage_stats
+
+    def fetch_all(
+        self, project_id: str, region: str
+    ) -> tuple[list[TableInfo], list[TableUsage]]:
+        """テーブル一覧と利用統計を並列で一括取得する。
+
+        Args:
+            project_id: GCPプロジェクトID
+            region: BigQueryリージョン
+
+        Returns:
+            (テーブル一覧, 利用統計) のタプル
+        """
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            tables_future = executor.submit(self.fetch_tables, project_id)
+            usage_future = executor.submit(self.fetch_usage_stats, project_id, region)
+
+            tables = tables_future.result()
+            usage_stats = usage_future.result()
+
+        return tables, usage_stats

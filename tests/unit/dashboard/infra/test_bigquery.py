@@ -9,6 +9,16 @@ from src.dashboard.domain.models import TableInfo, TableUsage
 from src.dashboard.infra.bigquery import BigQueryTableRepository
 
 
+@pytest.fixture(autouse=True)
+def reset_bigquery_client():  # type: ignore[misc]
+    """各テスト前後でBigQueryクライアントをリセットする。"""
+    BigQueryTableRepository._client = None
+    BigQueryTableRepository._project_id = None
+    yield
+    BigQueryTableRepository._client = None
+    BigQueryTableRepository._project_id = None
+
+
 class TestFetchTables:
     """fetch_tablesメソッドのテスト。"""
 
@@ -175,3 +185,67 @@ class TestFetchUsageStats:
         mock_client.query.assert_called_once()
         query_arg = mock_client.query.call_args[0][0]
         assert "region-asia-northeast1" in query_arg
+
+
+class TestFetchAll:
+    """fetch_allメソッドのテスト。"""
+
+    def test_returns_tuple_of_tables_and_usage(self) -> None:
+        """テーブル一覧と利用統計のタプルを返却することを検証する。"""
+        repository = BigQueryTableRepository()
+
+        mock_client = MagicMock()
+
+        # データセットとテーブルのモック
+        mock_dataset = MagicMock()
+        mock_dataset.dataset_id = "dataset1"
+        mock_table = MagicMock()
+        mock_table.dataset_id = "dataset1"
+        mock_table.table_id = "table1"
+
+        mock_client.list_datasets.return_value = [mock_dataset]
+        mock_client.list_tables.return_value = [mock_table]
+
+        # クエリ結果のモック
+        mock_row = MagicMock()
+        mock_row.dataset_id = "dataset1"
+        mock_row.table_id = "table1"
+        mock_row.reference_count = 10
+        mock_row.unique_users = 3
+
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [mock_row]
+        mock_client.query.return_value = mock_query_job
+
+        with patch(
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+        ):
+            tables, usage_stats = repository.fetch_all("test-project", "region-us")
+
+        assert len(tables) == 1
+        assert isinstance(tables[0], TableInfo)
+        assert tables[0].dataset_id == "dataset1"
+
+        assert len(usage_stats) == 1
+        assert isinstance(usage_stats[0], TableUsage)
+        assert usage_stats[0].reference_count == 10
+
+
+class TestClientSingleton:
+    """クライアントシングルトンのテスト。"""
+
+    def test_reuses_client_for_same_project(self) -> None:
+        """同じプロジェクトIDでクライアントが再利用されることを検証する。"""
+        repository = BigQueryTableRepository()
+
+        mock_client = MagicMock()
+        mock_client.list_datasets.return_value = []
+
+        with patch(
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+        ) as mock_constructor:
+            repository.fetch_tables("test-project")
+            repository.fetch_tables("test-project")
+
+            # クライアントは1回だけ作成される
+            assert mock_constructor.call_count == 1

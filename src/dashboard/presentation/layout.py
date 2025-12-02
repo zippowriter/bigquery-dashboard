@@ -3,9 +3,12 @@
 ダッシュボードのメインレイアウトを構築するオーケストレーション層。
 """
 
-from dash import html
+from typing import Any
+
+from dash import dcc, html
 from google.api_core.exceptions import GoogleAPIError
 
+from src.dashboard.domain.models import TableUsage
 from src.dashboard.domain.repositories import TableRepository
 from src.dashboard.domain.services import TableUsageService
 from src.dashboard.infra.bigquery import BigQueryTableRepository
@@ -34,7 +37,29 @@ def build_layout(
         ダッシュボードのルートDivコンポーネント。
         エラー発生時はエラーメッセージを含むDivを返却。
     """
-    children: list[html.H1 | html.P] = [html.H1(children=TITLE)]
+    # 設定情報をStoreに保存（コールバックで使用）
+    config_store = dcc.Store(
+        id="app-config",
+        data={"project_id": project_id, "region": region},
+    )
+
+    # 更新ボタン
+    refresh_button = html.Button(
+        "データを更新",
+        id="refresh-button",
+        n_clicks=0,
+        style={
+            "marginBottom": "10px",
+            "padding": "8px 16px",
+            "cursor": "pointer",
+        },
+    )
+
+    children: list[Any] = [
+        html.H1(children=TITLE),
+        config_store,
+        refresh_button,
+    ]
 
     if project_id is None:
         return html.Div(children=children)
@@ -43,24 +68,59 @@ def build_layout(
     if repository is None:
         repository = BigQueryTableRepository()
 
+    # データコンテナを追加（コールバックで更新される）
+    data_content = build_data_content(project_id, region, repository)
+    children.append(html.Div(id="data-container", children=data_content))
+
+    return html.Div(children=children)
+
+
+def build_data_content(
+    project_id: str,
+    region: str,
+    repository: TableRepository,
+) -> Any:
+    """データコンテンツを構築する。
+
+    Args:
+        project_id: GCPプロジェクトID
+        region: BigQueryリージョン
+        repository: テーブルリポジトリ
+
+    Returns:
+        DataTableまたはエラーメッセージを含むコンポーネント
+    """
     try:
         # テーブル一覧を取得
         tables = repository.fetch_tables(project_id)
 
         if not tables:
-            children.append(html.P("テーブルが存在しません"))
-        else:
-            # 利用統計を取得
-            usage_stats = repository.fetch_usage_stats(project_id, region)
+            return html.P("テーブルが存在しません")
 
-            # ドメインサービスでデータを結合
-            merged = TableUsageService.merge_usage_data(tables, usage_stats)
+        # 利用統計を取得
+        usage_stats = repository.fetch_usage_stats(project_id, region)
 
-            # DataTableを生成して追加
-            datatable = create_usage_datatable(merged)
-            children.append(datatable)  # pyright: ignore[reportArgumentType]
+        # ドメインサービスでデータを結合
+        merged = TableUsageService.merge_usage_data(tables, usage_stats)
+
+        # DataTableを生成して返却
+        return create_usage_datatable(merged)
 
     except GoogleAPIError as e:
-        children.append(create_error_message(f"BigQuery APIエラー: {e}"))
+        return create_error_message(f"BigQuery APIエラー: {e}")
 
-    return html.Div(children=children)
+
+def build_data_content_from_data(
+    tables_data: list[TableUsage],
+) -> Any:
+    """取得済みデータからデータコンテンツを構築する。
+
+    Args:
+        tables_data: 結合済みのテーブル利用統計リスト
+
+    Returns:
+        DataTableコンポーネント
+    """
+    if not tables_data:
+        return html.P("テーブルが存在しません")
+    return create_usage_datatable(tables_data)
