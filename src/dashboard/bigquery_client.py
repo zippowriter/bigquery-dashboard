@@ -32,9 +32,7 @@ def fetch_table_list(project_id: str) -> DataFrame:
 
     # 全データセットを取得し、各データセット内のテーブルを収集
     # google-cloud-bigqueryライブラリの型定義が不完全なためAnyを使用
-    dataset: Any
     for dataset in client.list_datasets():  # pyright: ignore[reportUnknownVariableType]
-        table: Any
         for table in client.list_tables(dataset.dataset_id):  # pyright: ignore[reportUnknownVariableType]
             table_list.append(
                 {
@@ -81,7 +79,12 @@ def fetch_table_usage_stats(project_id: str, region: str = "region-us") -> DataF
             COUNT(DISTINCT user_email) AS unique_users
         FROM `{region}`.INFORMATION_SCHEMA.JOBS_BY_PROJECT,
             UNNEST(referenced_tables) AS t
-        WHERE t.project_id = @project_id
+        WHERE
+            t.project_id = @project_id
+            AND NOT STARTS_WITH(t.dataset_id, '_')
+            AND NOT STARTS_WITH(t.dataset_id, 'auditlog')
+            AND NOT STARTS_WITH(t.table_id, 'INFORMATION_SCHEMA')
+            AND DATE(creation_time) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
         GROUP BY t.dataset_id, t.table_id
     """
 
