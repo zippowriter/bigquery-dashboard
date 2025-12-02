@@ -215,34 +215,6 @@
   - **REFACTORING**: エラーメッセージをi18n対応可能な構造に
   - _Requirements: 6.1, 6.2, 6.5_
 
-### Task 8: CLIインターフェースの拡張（統合的・テスト容易性: 低〜中）
-
-- [ ] 8.1 CLIオプション定義を実装する
-  - **RED**: --project オプションが必須であることを検証するテストを書く
-  - **RED**: --source オプション（info_schema/audit_log/both）のパーステストを書く
-  - **RED**: --days, --start-date, --end-date オプションのパーステストを書く
-  - **RED**: --dataset, --table-pattern, --min-count オプションのパーステストを書く
-  - **GREEN**: Typerを使用してtable-accessコマンドを定義する
-  - **REFACTORING**: オプションのバリデーションをコールバック関数に分離
-  - _Requirements: 3.5, 5.1, 5.2, 5.3, 5.4_
-
-- [ ] 8.2 出力形式オプションを実装する
-  - **RED**: --format オプション（console/csv/json）のパーステストを書く
-  - **RED**: --output オプション（ファイルパス）のパーステストを書く
-  - **RED**: デフォルトがconsole出力であることを検証するテストを書く
-  - **GREEN**: 出力オプションをコマンドに追加する
-  - **REFACTORING**: フォーマッター選択ロジックをファクトリパターンに
-  - _Requirements: 4.1, 4.3, 4.4_
-
-- [ ] 8.3 コマンド実行フローを統合する
-  - **RED**: オプションからFilterConfigが正しく生成されるテストを書く
-  - **RED**: TableAccessCounterが呼び出されることを検証するテスト（モック）を書く
-  - **RED**: 選択されたフォーマッターで出力されることを検証するテストを書く
-  - **RED**: エラー発生時に適切な終了コードが設定されるテストを書く
-  - **GREEN**: コマンドハンドラを実装し、各コンポーネントを統合する
-  - **REFACTORING**: 依存性注入を整理し、テスタビリティを向上
-  - _Requirements: 1.1, 2.1, 3.4, 4.1_
-
 ## Out of Scope
 
 - 統合テスト（INFORMATION_SCHEMA統合テスト、Audit Log統合テスト、エンドツーエンドテスト）は本実装のスコープ外とする
