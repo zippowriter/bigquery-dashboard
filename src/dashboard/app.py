@@ -3,7 +3,7 @@
 from dash import Dash
 
 from src.dashboard.config import AppConfig
-from src.dashboard.layout import build_layout
+from src.dashboard.presentation.layout import build_layout
 
 
 def create_app(config: AppConfig) -> Dash:

@@ -1,18 +1,20 @@
-"""Tests for BigQuery client module."""
+"""BigQueryTableRepositoryのテスト。"""
 
 from unittest.mock import MagicMock, patch
 
-import pandas as pd
 import pytest
 from google.api_core.exceptions import GoogleAPIError
 
+from src.dashboard.domain.models import TableInfo, TableUsage
+from src.dashboard.infra.bigquery import BigQueryTableRepository
 
-class TestFetchTableList:
-    """Tests for fetch_table_list function."""
 
-    def test_returns_dataframe_with_correct_columns(self) -> None:
-        """fetch_table_listがdataset_idとtable_idカラムを持つDataFrameを返却することを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_list
+class TestFetchTables:
+    """fetch_tablesメソッドのテスト。"""
+
+    def test_returns_list_of_table_info(self) -> None:
+        """テーブル情報のリストを返却することを検証する。"""
+        repository = BigQueryTableRepository()
 
         # BigQueryクライアントをモック
         mock_client = MagicMock()
@@ -51,60 +53,56 @@ class TestFetchTableList:
         mock_client.list_tables.side_effect = mock_list_tables
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
-            df = fetch_table_list("test-project")
+            tables = repository.fetch_tables("test-project")
 
-        # DataFrameの検証
-        assert isinstance(df, pd.DataFrame)
-        assert list(df.columns) == ["dataset_id", "table_id"]
-        assert len(df) == 3
-        assert df.iloc[0]["dataset_id"] == "dataset1"
-        assert df.iloc[0]["table_id"] == "table1"
+        assert len(tables) == 3
+        assert all(isinstance(t, TableInfo) for t in tables)
+        assert tables[0].dataset_id == "dataset1"
+        assert tables[0].table_id == "table1"
 
-    def test_returns_empty_dataframe_when_no_datasets(self) -> None:
-        """データセットが存在しない場合、空のDataFrameを返却することを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_list
+    def test_returns_empty_list_when_no_datasets(self) -> None:
+        """データセットが存在しない場合、空リストを返却することを検証する。"""
+        repository = BigQueryTableRepository()
 
         mock_client = MagicMock()
         mock_client.list_datasets.return_value = []
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
-            df = fetch_table_list("test-project")
+            tables = repository.fetch_tables("test-project")
 
-        assert isinstance(df, pd.DataFrame)
-        assert list(df.columns) == ["dataset_id", "table_id"]
-        assert len(df) == 0
+        assert tables == []
 
     def test_raises_error_when_api_fails(self) -> None:
         """BigQuery API呼び出しが失敗した場合、例外がスローされることを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_list
+        repository = BigQueryTableRepository()
 
         mock_client = MagicMock()
         mock_client.list_datasets.side_effect = GoogleAPIError("API Error")
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             with pytest.raises(GoogleAPIError):
-                fetch_table_list("test-project")
+                repository.fetch_tables("test-project")
 
     def test_raises_value_error_for_empty_project_id(self) -> None:
         """空のproject_idを渡した場合、ValueErrorがスローされることを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_list
+        repository = BigQueryTableRepository()
 
         with pytest.raises(ValueError, match="project_id"):
-            fetch_table_list("")
+            repository.fetch_tables("")
 
 
-class TestFetchTableUsageStats:
-    """fetch_table_usage_stats関数のテスト。"""
+class TestFetchUsageStats:
+    """fetch_usage_statsメソッドのテスト。"""
 
-    def test_returns_dataframe_with_correct_columns(self) -> None:
-        """利用統計DataFrameが4カラム（dataset_id, table_id, reference_count, unique_users）を持つことを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_usage_stats
+    def test_returns_list_of_table_usage(self) -> None:
+        """利用統計のリストを返却することを検証する。"""
+        repository = BigQueryTableRepository()
 
         mock_client = MagicMock()
 
@@ -126,25 +124,19 @@ class TestFetchTableUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
-            df = fetch_table_usage_stats("test-project")
+            usage_stats = repository.fetch_usage_stats("test-project", "region-us")
 
-        assert isinstance(df, pd.DataFrame)
-        assert list(df.columns) == [
-            "dataset_id",
-            "table_id",
-            "reference_count",
-            "unique_users",
-        ]
-        assert len(df) == 2
-        assert df.iloc[0]["dataset_id"] == "dataset1"
-        assert df.iloc[0]["reference_count"] == 10
-        assert df.iloc[1]["unique_users"] == 2
+        assert len(usage_stats) == 2
+        assert all(isinstance(u, TableUsage) for u in usage_stats)
+        assert usage_stats[0].dataset_id == "dataset1"
+        assert usage_stats[0].reference_count == 10
+        assert usage_stats[1].unique_users == 2
 
-    def test_returns_empty_dataframe_with_correct_schema(self) -> None:
-        """空結果時も4カラム構成のDataFrameを返却することを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_usage_stats
+    def test_returns_empty_list_when_no_results(self) -> None:
+        """クエリ結果が空の場合、空リストを返却することを検証する。"""
+        repository = BigQueryTableRepository()
 
         mock_client = MagicMock()
         mock_query_job = MagicMock()
@@ -152,29 +144,22 @@ class TestFetchTableUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
-            df = fetch_table_usage_stats("test-project")
+            usage_stats = repository.fetch_usage_stats("test-project", "region-us")
 
-        assert isinstance(df, pd.DataFrame)
-        assert list(df.columns) == [
-            "dataset_id",
-            "table_id",
-            "reference_count",
-            "unique_users",
-        ]
-        assert len(df) == 0
+        assert usage_stats == []
 
     def test_raises_value_error_for_empty_project_id(self) -> None:
         """空のproject_idを渡した場合、ValueErrorがスローされることを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_usage_stats
+        repository = BigQueryTableRepository()
 
         with pytest.raises(ValueError, match="project_id"):
-            fetch_table_usage_stats("")
+            repository.fetch_usage_stats("", "region-us")
 
     def test_uses_region_parameter_in_query(self) -> None:
         """リージョンパラメータがクエリに使用されることを検証する。"""
-        from src.dashboard.bigquery_client import fetch_table_usage_stats
+        repository = BigQueryTableRepository()
 
         mock_client = MagicMock()
         mock_query_job = MagicMock()
@@ -182,9 +167,9 @@ class TestFetchTableUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
-            fetch_table_usage_stats("test-project", region="region-asia-northeast1")
+            repository.fetch_usage_stats("test-project", region="region-asia-northeast1")
 
         # queryが呼ばれ、regionが含まれていることを確認
         mock_client.query.assert_called_once()
