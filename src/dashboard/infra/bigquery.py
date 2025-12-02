@@ -52,6 +52,7 @@ class BigQueryTableRepository:
 
         Args:
             project_id: GCPプロジェクトID
+            dataset_prefix: データセット名の接頭辞（指定時はこの接頭辞で始まるデータセットのみ取得）
 
         Returns:
             テーブル情報のリスト
@@ -63,13 +64,30 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
-        self._logger.info("テーブル一覧取得開始", project_id=project_id)
+        self._logger.info(
+            "テーブル一覧取得開始", project_id=project_id
+        )
         client = self._get_client(project_id)
 
         # 全データセットを取得
         # google-cloud-bigqueryライブラリの型定義が不完全なためpyright ignoreを使用
-        datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
-        self._logger.debug("データセット取得完了", dataset_count=len(datasets))
+        all_datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
+
+        # 接頭辞フィルタを適用
+        if dataset_prefix:
+            datasets = [
+                ds
+                for ds in all_datasets  # pyright: ignore[reportUnknownVariableType]
+                if str(ds.dataset_id).startswith(dataset_prefix)  # pyright: ignore[reportUnknownMemberType]
+            ]
+        else:
+            datasets = all_datasets
+
+        self._logger.debug(
+            "データセット取得完了",
+            total_count=len(all_datasets),
+            filtered_count=len(datasets),
+        )
 
         if not datasets:
             self._logger.info("テーブル一覧取得完了", count=0)
@@ -170,7 +188,7 @@ class BigQueryTableRepository:
         return usage_stats
 
     def fetch_all(
-        self, project_id: str, region: str
+        self, project_id: str, region: str, dataset_prefix: str | None = None
     ) -> tuple[list[TableInfo], list[TableUsage]]:
         """テーブル一覧と利用統計を並列で一括取得する。
 
@@ -183,7 +201,7 @@ class BigQueryTableRepository:
         """
         self._logger.info("一括取得開始", project_id=project_id, region=region)
         with ThreadPoolExecutor(max_workers=2) as executor:
-            tables_future = executor.submit(self.fetch_tables, project_id)
+            tables_future = executor.submit(self.fetch_tables, project_id, dataset_prefix)
             usage_future = executor.submit(self.fetch_usage_stats, project_id, region)
 
             tables = tables_future.result()
