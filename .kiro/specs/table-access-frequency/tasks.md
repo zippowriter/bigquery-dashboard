@@ -200,14 +200,14 @@
 
 ### Task 7: 共通エラーハンドリングと進捗表示（テスト容易性: 中）
 
-- [ ] 7.1 進捗表示機能を実装する
+- [x] 7.1 進捗表示機能を実装する
   - **RED**: ProgressCallbackが処理済み件数を受け取るテストを書く
   - **RED**: 複数データソース処理時に各ソースの進捗が報告されるテストを書く
   - **GREEN**: ProgressReporterクラスを実装する
   - **REFACTORING**: 既存のProgressCallbackパターンとの整合性を確認
   - _Requirements: 6.4_
 
-- [ ] 7.2 共通エラーハンドリングを実装する
+- [x] 7.2 共通エラーハンドリングを実装する
   - **RED**: BigQuery API接続エラー時のメッセージテストを書く
   - **RED**: 認証エラー時にgcloud auth application-default loginを案内するテストを書く
   - **RED**: 予期しないエラー時にログファイルパスを案内するテストを書く
