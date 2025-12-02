@@ -34,3 +34,7 @@ class AppConfig(BaseModel):
         default_factory=lambda: os.environ.get("GOOGLE_CLOUD_PROJECT"),
         description="BigQuery対象プロジェクトID",
     )
+    region: str = Field(
+        default_factory=lambda: os.environ.get("BIGQUERY_REGION", "region-us"),
+        description="BigQueryリージョン（INFORMATION_SCHEMAクエリ用）",
+    )

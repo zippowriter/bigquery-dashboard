@@ -97,3 +97,96 @@ class TestFetchTableList:
 
         with pytest.raises(ValueError, match="project_id"):
             fetch_table_list("")
+
+
+class TestFetchTableUsageStats:
+    """fetch_table_usage_stats関数のテスト。"""
+
+    def test_returns_dataframe_with_correct_columns(self) -> None:
+        """利用統計DataFrameが4カラム（dataset_id, table_id, reference_count, unique_users）を持つことを検証する。"""
+        from src.dashboard.bigquery_client import fetch_table_usage_stats
+
+        mock_client = MagicMock()
+
+        # クエリ結果のモック
+        mock_row1 = MagicMock()
+        mock_row1.dataset_id = "dataset1"
+        mock_row1.table_id = "table1"
+        mock_row1.reference_count = 10
+        mock_row1.unique_users = 3
+
+        mock_row2 = MagicMock()
+        mock_row2.dataset_id = "dataset2"
+        mock_row2.table_id = "table2"
+        mock_row2.reference_count = 5
+        mock_row2.unique_users = 2
+
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = [mock_row1, mock_row2]
+        mock_client.query.return_value = mock_query_job
+
+        with patch(
+            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+        ):
+            df = fetch_table_usage_stats("test-project")
+
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == [
+            "dataset_id",
+            "table_id",
+            "reference_count",
+            "unique_users",
+        ]
+        assert len(df) == 2
+        assert df.iloc[0]["dataset_id"] == "dataset1"
+        assert df.iloc[0]["reference_count"] == 10
+        assert df.iloc[1]["unique_users"] == 2
+
+    def test_returns_empty_dataframe_with_correct_schema(self) -> None:
+        """空結果時も4カラム構成のDataFrameを返却することを検証する。"""
+        from src.dashboard.bigquery_client import fetch_table_usage_stats
+
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+        mock_client.query.return_value = mock_query_job
+
+        with patch(
+            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+        ):
+            df = fetch_table_usage_stats("test-project")
+
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == [
+            "dataset_id",
+            "table_id",
+            "reference_count",
+            "unique_users",
+        ]
+        assert len(df) == 0
+
+    def test_raises_value_error_for_empty_project_id(self) -> None:
+        """空のproject_idを渡した場合、ValueErrorがスローされることを検証する。"""
+        from src.dashboard.bigquery_client import fetch_table_usage_stats
+
+        with pytest.raises(ValueError, match="project_id"):
+            fetch_table_usage_stats("")
+
+    def test_uses_region_parameter_in_query(self) -> None:
+        """リージョンパラメータがクエリに使用されることを検証する。"""
+        from src.dashboard.bigquery_client import fetch_table_usage_stats
+
+        mock_client = MagicMock()
+        mock_query_job = MagicMock()
+        mock_query_job.result.return_value = []
+        mock_client.query.return_value = mock_query_job
+
+        with patch(
+            "src.dashboard.bigquery_client.bigquery.Client", return_value=mock_client
+        ):
+            fetch_table_usage_stats("test-project", region="region-asia-northeast1")
+
+        # queryが呼ばれ、regionが含まれていることを確認
+        mock_client.query.assert_called_once()
+        query_arg = mock_client.query.call_args[0][0]
+        assert "region-asia-northeast1" in query_arg
