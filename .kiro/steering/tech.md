@@ -62,8 +62,11 @@ uv run ruff format
 # Lint: task lint
 uv run ruff check
 
-# Test: task test
+# Test (all): task test
 uv run pytest
+
+# Test (unit only): task test-unit
+uv run pytest tests/unit -v
 
 # Type check: task type-check
 uv run pyright
@@ -78,3 +81,5 @@ uv run pyright
 
 ---
 _Document standards and patterns, not every dependency_
+
+<!-- updated_at: 2025-12-02 -->

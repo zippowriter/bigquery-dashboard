@@ -28,9 +28,10 @@
   - `bigquery_client.py`: BigQuery APIクライアント・データ取得
 
 ### Tests (`/tests/`)
-- **Location**: `/tests/unit/{module_name}`
+- **Location**: `/tests/unit/{package}/` - 単体テスト、`/tests/integration/` - 統合テスト
 - **Purpose**: テストコード配置
 - **Naming**: `test_{module}.py` パターン
+- **Structure**: ソースパッケージ構造をミラー（例: `src/dashboard/` -> `tests/unit/dashboard/`）
 
 ## Naming Conventions
 
@@ -68,3 +69,5 @@ from src.dashboard.layout import build_layout
 
 ---
 _Document patterns, not file trees. New files following patterns should not require updates_
+
+<!-- updated_at: 2025-12-02 -->

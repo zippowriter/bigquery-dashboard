@@ -6,7 +6,11 @@ BigQueryのテーブル利用状況を可視化するダッシュボードアプ
 ## Core Capabilities
 
 - **テーブル利用分析**: BigQueryテーブルの参照頻度・パターンを分析
+  - テーブル一覧取得（全データセット横断）
+  - 参照回数・ユニークユーザー数の集計（INFORMATION_SCHEMA.JOBS_BY_PROJECT）
 - **可視化ダッシュボード**: Dashによるインタラクティブな利用状況表示
+  - 未使用テーブルのハイライト表示（参照回数0件）
+  - ソート可能なDataTable
 - **Google Cloud連携**: BigQuery APIとの統合
 
 ## Target Use Cases
@@ -22,3 +26,5 @@ BigQueryのINFORMATION_SCHEMAやauditlogsから取得した情報を
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
+
+<!-- updated_at: 2025-12-02 -->
