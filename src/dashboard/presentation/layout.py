@@ -8,11 +8,13 @@ from typing import Any
 from dash import dcc, html
 from google.api_core.exceptions import GoogleAPIError
 
+from src.dashboard.domain.logging import Logger
 from src.dashboard.domain.models import TableUsage
 from src.dashboard.domain.repositories import TableRepository
 from src.dashboard.domain.services import TableUsageService
 from src.dashboard.infra.bigquery import BigQueryTableRepository
 from src.dashboard.infra.lineage import LineageRepository, LineageRepositoryProtocol
+from src.dashboard.logging_config import get_logger
 from src.dashboard.presentation.components import create_error_message, create_usage_datatable
 
 # ダッシュボードタイトル定数
@@ -24,6 +26,7 @@ def build_layout(
     region: str = "region-us",
     repository: TableRepository | None = None,
     lineage_repository: LineageRepositoryProtocol | None = None,
+    logger: Logger | None = None,
 ) -> html.Div:
     """ダッシュボードレイアウトを構築する。
 
@@ -35,11 +38,15 @@ def build_layout(
         region: BigQueryリージョン（INFORMATION_SCHEMAクエリ用）。デフォルトはregion-us。
         repository: テーブルリポジトリ。Noneの場合はBigQueryTableRepositoryを使用。
         lineage_repository: リネージリポジトリ。Noneの場合はLineageRepositoryを使用。
+        logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
 
     Returns:
         ダッシュボードのルートDivコンポーネント。
         エラー発生時はエラーメッセージを含むDivを返却。
     """
+    _logger = logger or get_logger()
+    _logger.info("レイアウト構築開始", project_id=project_id, region=region)
+
     # 設定情報をStoreに保存（コールバックで使用）
     config_store = dcc.Store(
         id="app-config",
@@ -65,6 +72,7 @@ def build_layout(
     ]
 
     if project_id is None:
+        _logger.debug("project_id未設定、データ表示をスキップ")
         return html.Div(children=children)
 
     # リポジトリのデフォルト実装を設定
@@ -72,9 +80,10 @@ def build_layout(
         repository = BigQueryTableRepository()
 
     # データコンテナを追加（コールバックで更新される）
-    data_content = build_data_content(project_id, region, repository, lineage_repository)
+    data_content = build_data_content(project_id, region, repository, lineage_repository, _logger)
     children.append(html.Div(id="data-container", children=data_content))
 
+    _logger.info("レイアウト構築完了")
     return html.Div(children=children)
 
 
@@ -83,6 +92,7 @@ def build_data_content(
     region: str,
     repository: TableRepository,
     lineage_repository: LineageRepositoryProtocol | None = None,
+    logger: Logger | None = None,
 ) -> Any:
     """データコンテンツを構築する。
 
@@ -91,19 +101,26 @@ def build_data_content(
         region: BigQueryリージョン
         repository: テーブルリポジトリ
         lineage_repository: リネージリポジトリ。Noneの場合はLineageRepositoryを使用。
+        logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
 
     Returns:
         DataTableまたはエラーメッセージを含むコンポーネント
     """
+    _logger = logger or get_logger()
+    _logger.debug("データコンテンツ構築開始")
+
     try:
         # テーブル一覧を取得
         tables = repository.fetch_tables(project_id)
+        _logger.debug("テーブル取得完了", count=len(tables))
 
         if not tables:
+            _logger.info("テーブルが存在しません")
             return html.P("テーブルが存在しません")
 
         # 利用統計を取得
         usage_stats = repository.fetch_usage_stats(project_id, region)
+        _logger.debug("利用統計取得完了", count=len(usage_stats))
 
         # ドメインサービスでデータを結合
         merged = TableUsageService.merge_usage_data(tables, usage_stats)
@@ -131,10 +148,12 @@ def build_data_content(
             merged, leaf_fqns, project_id
         )
 
+        _logger.debug("データコンテンツ構築完了", table_count=len(merged_with_leaf))
         # DataTableを生成して返却
         return create_usage_datatable(merged_with_leaf)
 
     except GoogleAPIError as e:
+        _logger.error("BigQuery APIエラー", error=str(e))
         return create_error_message(f"BigQuery APIエラー: {e}")
 
 

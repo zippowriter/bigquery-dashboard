@@ -5,9 +5,11 @@ CSVキャッシュとBigQueryリポジトリを組み合わせた複合リポジ
 
 from typing import Protocol
 
+from src.dashboard.domain.logging import Logger
 from src.dashboard.domain.models import TableInfo, TableUsage
 from src.dashboard.infra.bigquery import BigQueryTableRepository
 from src.dashboard.infra.csv_cache import CsvCacheRepository
+from src.dashboard.logging_config import get_logger
 
 
 class BigQueryRepositoryProtocol(Protocol):
@@ -39,15 +41,18 @@ class CachedTableRepository:
         self,
         csv_cache: CsvCacheRepository | None = None,
         bigquery_repo: BigQueryRepositoryProtocol | None = None,
+        logger: Logger | None = None,
     ):
         """リポジトリを初期化する。
 
         Args:
             csv_cache: CSVキャッシュリポジトリ。Noneの場合はデフォルトを使用。
             bigquery_repo: BigQueryリポジトリ。Noneの場合はデフォルトを使用。
+            logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
         """
         self._csv_cache = csv_cache or CsvCacheRepository()
         self._bigquery_repo: BigQueryRepositoryProtocol = bigquery_repo or BigQueryTableRepository()
+        self._logger = logger or get_logger()
 
     def has_cache(self) -> bool:
         """キャッシュが存在するかチェックする。
@@ -69,7 +74,9 @@ class CachedTableRepository:
             テーブル情報のリスト
         """
         if self._csv_cache.has_cache():
+            self._logger.debug("キャッシュヒット: テーブル一覧をCSVから取得")
             return self._csv_cache.fetch_tables(project_id)
+        self._logger.debug("キャッシュミス: テーブル一覧をBigQuery APIから取得")
         return self._bigquery_repo.fetch_tables(project_id)
 
     def fetch_usage_stats(self, project_id: str, region: str) -> list[TableUsage]:
@@ -85,7 +92,9 @@ class CachedTableRepository:
             テーブル利用統計のリスト
         """
         if self._csv_cache.has_cache():
+            self._logger.debug("キャッシュヒット: 利用統計をCSVから取得")
             return self._csv_cache.fetch_usage_stats(project_id, region)
+        self._logger.debug("キャッシュミス: 利用統計をBigQuery APIから取得")
         return self._bigquery_repo.fetch_usage_stats(project_id, region)
 
     def refresh(self, project_id: str, region: str) -> tuple[list[TableInfo], list[TableUsage]]:
@@ -98,9 +107,11 @@ class CachedTableRepository:
         Returns:
             (テーブル一覧, 利用統計) のタプル
         """
+        self._logger.info("データリフレッシュ開始", project_id=project_id, region=region)
         tables, usage_stats = self._bigquery_repo.fetch_all(project_id, region)
         self._csv_cache.save_tables(tables)
         self._csv_cache.save_usage_stats(usage_stats)
+        self._logger.info("データリフレッシュ完了", tables_count=len(tables), usage_count=len(usage_stats))
         return tables, usage_stats
 
     def clear_cache(self) -> None:

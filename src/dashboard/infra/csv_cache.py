@@ -7,7 +7,9 @@ import csv
 import tempfile
 from pathlib import Path
 
+from src.dashboard.domain.logging import Logger
 from src.dashboard.domain.models import TableInfo, TableUsage
+from src.dashboard.logging_config import get_logger
 
 
 class CsvCacheRepository:
@@ -16,14 +18,16 @@ class CsvCacheRepository:
     一時ディレクトリにCSVファイルを保存し、起動時間を短縮する。
     """
 
-    def __init__(self, cache_dir: Path | None = None):
+    def __init__(self, cache_dir: Path | None = None, logger: Logger | None = None):
         """リポジトリを初期化する。
 
         Args:
             cache_dir: キャッシュディレクトリ。Noneの場合は一時ディレクトリを使用。
+            logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
         """
         self._cache_dir = cache_dir or Path(tempfile.gettempdir()) / "bigquery-dashboard"
         self._cache_dir.mkdir(parents=True, exist_ok=True)
+        self._logger = logger or get_logger()
 
     @property
     def tables_cache_path(self) -> Path:
@@ -55,7 +59,9 @@ class CsvCacheRepository:
         Raises:
             FileNotFoundError: キャッシュファイルが存在しない場合
         """
+        self._logger.debug("テーブルキャッシュ読み込み開始", path=str(self.tables_cache_path))
         if not self.tables_cache_path.exists():
+            self._logger.warning("キャッシュファイル未存在", path=str(self.tables_cache_path))
             raise FileNotFoundError(f"キャッシュファイルが存在しません: {self.tables_cache_path}")
 
         tables: list[TableInfo] = []
@@ -68,6 +74,7 @@ class CsvCacheRepository:
                         table_id=row["table_id"],
                     )
                 )
+        self._logger.debug("テーブルキャッシュ読み込み完了", count=len(tables))
         return tables
 
     def fetch_usage_stats(self, project_id: str, region: str) -> list[TableUsage]:
@@ -80,7 +87,9 @@ class CsvCacheRepository:
         Returns:
             テーブル利用統計のリスト。キャッシュファイルが存在しない場合は空リスト。
         """
+        self._logger.debug("利用統計キャッシュ読み込み開始", path=str(self.usage_cache_path))
         if not self.usage_cache_path.exists():
+            self._logger.debug("利用統計キャッシュファイル未存在", path=str(self.usage_cache_path))
             return []
 
         usage_stats: list[TableUsage] = []
@@ -95,6 +104,7 @@ class CsvCacheRepository:
                         unique_users=int(row["unique_users"]),
                     )
                 )
+        self._logger.debug("利用統計キャッシュ読み込み完了", count=len(usage_stats))
         return usage_stats
 
     def save_tables(self, tables: list[TableInfo]) -> None:
@@ -103,6 +113,7 @@ class CsvCacheRepository:
         Args:
             tables: 保存するテーブル情報のリスト
         """
+        self._logger.debug("テーブルキャッシュ保存開始", path=str(self.tables_cache_path), count=len(tables))
         with self.tables_cache_path.open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["dataset_id", "table_id"])
             writer.writeheader()
@@ -113,6 +124,7 @@ class CsvCacheRepository:
                         "table_id": table.table_id,
                     }
                 )
+        self._logger.info("テーブルキャッシュ保存完了", count=len(tables))
 
     def save_usage_stats(self, usage_stats: list[TableUsage]) -> None:
         """利用統計をCSVに保存する。
@@ -120,6 +132,7 @@ class CsvCacheRepository:
         Args:
             usage_stats: 保存する利用統計のリスト
         """
+        self._logger.debug("利用統計キャッシュ保存開始", path=str(self.usage_cache_path), count=len(usage_stats))
         with self.usage_cache_path.open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(
                 f, fieldnames=["dataset_id", "table_id", "reference_count", "unique_users"]
@@ -134,10 +147,13 @@ class CsvCacheRepository:
                         "unique_users": usage.unique_users,
                     }
                 )
+        self._logger.info("利用統計キャッシュ保存完了", count=len(usage_stats))
 
     def clear_cache(self) -> None:
         """キャッシュファイルを削除する。"""
+        self._logger.info("キャッシュクリア開始", cache_dir=str(self._cache_dir))
         if self.tables_cache_path.exists():
             self.tables_cache_path.unlink()
         if self.usage_cache_path.exists():
             self.usage_cache_path.unlink()
+        self._logger.info("キャッシュクリア完了")

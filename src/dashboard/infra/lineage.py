@@ -8,6 +8,9 @@ from typing import Any, Protocol
 from google.cloud.datacatalog_lineage_v1 import LineageClient
 from google.cloud.datacatalog_lineage_v1.types import EntityReference, SearchLinksRequest
 
+from src.dashboard.domain.logging import Logger
+from src.dashboard.logging_config import get_logger
+
 
 class LineageClientProtocol(Protocol):
     """LineageClientのProtocol定義（テスト用）。"""
@@ -38,13 +41,19 @@ class LineageRepository:
 
     _client: LineageClient | None = None
 
-    def __init__(self, client: LineageClientProtocol | None = None) -> None:
+    def __init__(
+        self,
+        client: LineageClientProtocol | None = None,
+        logger: Logger | None = None,
+    ) -> None:
         """リポジトリを初期化する。
 
         Args:
             client: LineageClientインスタンス。Noneの場合はデフォルトを使用。
+            logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
         """
         self._injected_client = client
+        self._logger = logger or get_logger()
 
     def _get_client(self) -> LineageClientProtocol:
         """LineageClientを取得する。
@@ -78,6 +87,7 @@ class LineageRepository:
         Returns:
             リーフテーブルのFQNセット
         """
+        self._logger.info("リーフテーブル検索開始", project_id=project_id, location=location, table_count=len(table_fqns))
         client = self._get_client()
         parent = f"projects/{project_id}/locations/{location}"
         non_leaf_tables: set[str] = set()
@@ -94,4 +104,6 @@ class LineageRepository:
                 break
 
         # 全テーブルから非リーフを除いたものがリーフ
-        return set(table_fqns) - non_leaf_tables
+        leaf_tables = set(table_fqns) - non_leaf_tables
+        self._logger.info("リーフテーブル検索完了", leaf_count=len(leaf_tables), non_leaf_count=len(non_leaf_tables))
+        return leaf_tables

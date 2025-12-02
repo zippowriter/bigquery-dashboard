@@ -8,7 +8,9 @@ from typing import Any
 
 from google.cloud import bigquery
 
+from src.dashboard.domain.logging import Logger
 from src.dashboard.domain.models import TableInfo, TableUsage
+from src.dashboard.logging_config import get_logger
 
 
 class BigQueryTableRepository:
@@ -20,6 +22,14 @@ class BigQueryTableRepository:
 
     _client: bigquery.Client | None = None
     _project_id: str | None = None
+
+    def __init__(self, logger: Logger | None = None) -> None:
+        """リポジトリを初期化する。
+
+        Args:
+            logger: ロガーインスタンス（省略時はデフォルトロガーを使用）
+        """
+        self._logger = logger or get_logger()
 
     def _get_client(self, project_id: str) -> bigquery.Client:
         """BigQueryクライアントを取得する。
@@ -53,13 +63,16 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
+        self._logger.info("テーブル一覧取得開始", project_id=project_id)
         client = self._get_client(project_id)
 
         # 全データセットを取得
         # google-cloud-bigqueryライブラリの型定義が不完全なためpyright ignoreを使用
         datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
+        self._logger.debug("データセット取得完了", dataset_count=len(datasets))
 
         if not datasets:
+            self._logger.info("テーブル一覧取得完了", count=0)
             return []
 
         tables: list[TableInfo] = []
@@ -88,6 +101,7 @@ class BigQueryTableRepository:
             for future in as_completed(future_to_dataset):
                 tables.extend(future.result())
 
+        self._logger.info("テーブル一覧取得完了", count=len(tables))
         return tables
 
     def fetch_usage_stats(self, project_id: str, region: str) -> list[TableUsage]:
@@ -110,6 +124,7 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
+        self._logger.info("利用統計取得開始", project_id=project_id, region=region)
         client = self._get_client(project_id)
 
         query = f"""
@@ -135,6 +150,7 @@ class BigQueryTableRepository:
             ]
         )
 
+        self._logger.debug("BigQueryクエリ実行中")
         query_job = client.query(query, job_config=job_config)
         results = query_job.result()
 
@@ -150,6 +166,7 @@ class BigQueryTableRepository:
                 )
             )
 
+        self._logger.info("利用統計取得完了", count=len(usage_stats))
         return usage_stats
 
     def fetch_all(
@@ -164,6 +181,7 @@ class BigQueryTableRepository:
         Returns:
             (テーブル一覧, 利用統計) のタプル
         """
+        self._logger.info("一括取得開始", project_id=project_id, region=region)
         with ThreadPoolExecutor(max_workers=2) as executor:
             tables_future = executor.submit(self.fetch_tables, project_id)
             usage_future = executor.submit(self.fetch_usage_stats, project_id, region)
@@ -171,4 +189,5 @@ class BigQueryTableRepository:
             tables = tables_future.result()
             usage_stats = usage_future.result()
 
+        self._logger.info("一括取得完了", tables_count=len(tables), usage_count=len(usage_stats))
         return tables, usage_stats
