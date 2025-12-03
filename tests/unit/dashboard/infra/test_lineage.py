@@ -4,7 +4,7 @@ from typing import Any
 
 from google.cloud.datacatalog_lineage_v1.types import SearchLinksRequest
 
-from src.dashboard.infra.lineage import LineageRepository
+from src.shared.infra.lineage import LineageRepository
 
 
 class FakeLineageClient:

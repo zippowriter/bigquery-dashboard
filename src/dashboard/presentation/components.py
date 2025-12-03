@@ -5,7 +5,7 @@ Dashコンポーネントの生成を提供する。
 
 from dash import dash_table, html
 
-from src.dashboard.domain.models import TableUsage
+from src.shared.domain.models import TableUsage
 
 
 def create_usage_datatable(usages: list[TableUsage]) -> dash_table.DataTable:

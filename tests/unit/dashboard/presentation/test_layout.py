@@ -3,7 +3,7 @@
 from dash import html
 from google.api_core.exceptions import GoogleAPIError
 
-from src.dashboard.domain.models import TableInfo, TableUsage
+from src.shared.domain.models import TableInfo, TableUsage
 from src.dashboard.presentation.layout import build_data_content, build_layout
 
 

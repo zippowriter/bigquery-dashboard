@@ -8,9 +8,9 @@ from typing import Any
 
 from google.cloud import bigquery
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.logging_config import get_logger
 
 
 class BigQueryTableRepository:
@@ -64,30 +64,14 @@ class BigQueryTableRepository:
         if not project_id:
             raise ValueError("project_idは空文字にできません")
 
-        self._logger.info(
-            "テーブル一覧取得開始", project_id=project_id
-        )
+        self._logger.info("テーブル一覧取得開始", project_id=project_id)
         client = self._get_client(project_id)
 
         # 全データセットを取得
         # google-cloud-bigqueryライブラリの型定義が不完全なためpyright ignoreを使用
-        all_datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
+        datasets = list(client.list_datasets())  # pyright: ignore[reportUnknownVariableType]
 
-        # 接頭辞フィルタを適用
-        if dataset_prefix:
-            datasets = [
-                ds
-                for ds in all_datasets  # pyright: ignore[reportUnknownVariableType]
-                if str(ds.dataset_id).startswith(dataset_prefix)  # pyright: ignore[reportUnknownMemberType]
-            ]
-        else:
-            datasets = all_datasets
-
-        self._logger.debug(
-            "データセット取得完了",
-            total_count=len(all_datasets),
-            filtered_count=len(datasets),
-        )
+        self._logger.debug("データセット取得完了", total_count=len(datasets))
 
         if not datasets:
             self._logger.info("テーブル一覧取得完了", count=0)
@@ -188,7 +172,9 @@ class BigQueryTableRepository:
         return usage_stats
 
     def fetch_all(
-        self, project_id: str, region: str, dataset_prefix: str | None = None
+        self,
+        project_id: str,
+        region: str,
     ) -> tuple[list[TableInfo], list[TableUsage]]:
         """テーブル一覧と利用統計を並列で一括取得する。
 
@@ -201,11 +187,13 @@ class BigQueryTableRepository:
         """
         self._logger.info("一括取得開始", project_id=project_id, region=region)
         with ThreadPoolExecutor(max_workers=2) as executor:
-            tables_future = executor.submit(self.fetch_tables, project_id, dataset_prefix)
+            tables_future = executor.submit(self.fetch_tables, project_id)
             usage_future = executor.submit(self.fetch_usage_stats, project_id, region)
 
             tables = tables_future.result()
             usage_stats = usage_future.result()
 
-        self._logger.info("一括取得完了", tables_count=len(tables), usage_count=len(usage_stats))
+        self._logger.info(
+            "一括取得完了", tables_count=len(tables), usage_count=len(usage_stats)
+        )
         return tables, usage_stats

@@ -3,7 +3,7 @@
 外部システムとの通信、技術的詳細の実装を提供する。
 """
 
-from src.dashboard.infra.bigquery import BigQueryTableRepository
+from src.shared.infra.bigquery import BigQueryTableRepository
 
 __all__ = [
     "BigQueryTableRepository",

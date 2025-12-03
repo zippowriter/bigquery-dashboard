@@ -8,8 +8,8 @@ from typing import Any, Protocol
 from google.cloud.datacatalog_lineage_v1 import LineageClient
 from google.cloud.datacatalog_lineage_v1.types import EntityReference, SearchLinksRequest
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.logging_config import get_logger
 
 
 class LineageClientProtocol(Protocol):

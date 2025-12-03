@@ -8,10 +8,10 @@ from typing import Any
 from dash import Input, Output, State, callback, html  # pyright: ignore[reportUnknownVariableType]
 from google.api_core.exceptions import GoogleAPIError
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.domain.services import TableUsageService
+from src.shared.domain.logging import Logger
+from src.shared.domain.services import TableUsageService
 from src.dashboard.infra.cached_repository import CachedTableRepository
-from src.dashboard.logging_config import get_logger
+from src.shared.logging_config import get_logger
 from src.dashboard.presentation.components import create_error_message, create_usage_datatable
 
 def register_callbacks(repository: CachedTableRepository, logger: Logger | None = None) -> None:

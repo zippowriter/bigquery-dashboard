@@ -5,11 +5,11 @@ CSVキャッシュとBigQueryリポジトリを組み合わせた複合リポジ
 
 from typing import Protocol
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.infra.bigquery import BigQueryTableRepository
-from src.dashboard.infra.csv_cache import CsvCacheRepository
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.infra.bigquery import BigQueryTableRepository
+from src.shared.infra.csv_cache import CsvCacheRepository
+from src.shared.logging_config import get_logger
 
 
 class BigQueryRepositoryProtocol(Protocol):

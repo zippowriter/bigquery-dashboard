@@ -7,9 +7,9 @@ import csv
 import tempfile
 from pathlib import Path
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.logging_config import get_logger
 
 
 class CsvCacheRepository:
@@ -96,12 +96,16 @@ class CsvCacheRepository:
         with self.usage_cache_path.open("r", encoding="utf-8", newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
+                # is_leafフィールドは後方互換性のためオプション扱い
+                is_leaf_str = row.get("is_leaf", "").lower()
+                is_leaf = is_leaf_str in ("true", "1", "yes")
                 usage_stats.append(
                     TableUsage(
                         dataset_id=row["dataset_id"],
                         table_id=row["table_id"],
                         reference_count=int(row["reference_count"]),
                         unique_users=int(row["unique_users"]),
+                        is_leaf=is_leaf,
                     )
                 )
         self._logger.debug("利用統計キャッシュ読み込み完了", count=len(usage_stats))
@@ -135,7 +139,7 @@ class CsvCacheRepository:
         self._logger.debug("利用統計キャッシュ保存開始", path=str(self.usage_cache_path), count=len(usage_stats))
         with self.usage_cache_path.open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(
-                f, fieldnames=["dataset_id", "table_id", "reference_count", "unique_users"]
+                f, fieldnames=["dataset_id", "table_id", "reference_count", "unique_users", "is_leaf"]
             )
             writer.writeheader()
             for usage in usage_stats:
@@ -145,6 +149,7 @@ class CsvCacheRepository:
                         "table_id": usage.table_id,
                         "reference_count": usage.reference_count,
                         "unique_users": usage.unique_users,
+                        "is_leaf": str(usage.is_leaf).lower(),
                     }
                 )
         self._logger.info("利用統計キャッシュ保存完了", count=len(usage_stats))

@@ -6,8 +6,8 @@
 import logging
 from functools import lru_cache
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.infra.console_logger import ConsoleLogger
+from src.shared.domain.logging import Logger
+from src.shared.infra.console_logger import ConsoleLogger
 
 
 @lru_cache(maxsize=1)

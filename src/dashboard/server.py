@@ -2,8 +2,8 @@
 
 from dash import Dash
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.logging_config import get_logger
 
 
 def run_server(

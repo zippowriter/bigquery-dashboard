@@ -1,6 +1,6 @@
 """ドメインモデルのテスト。"""
 
-from src.dashboard.domain.models import TableUsage
+from src.shared.domain.models import TableUsage
 
 
 class TestTableUsage:

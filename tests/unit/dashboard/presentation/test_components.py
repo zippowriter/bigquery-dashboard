@@ -4,7 +4,7 @@ from typing import Any
 
 from dash import dash_table, html
 
-from src.dashboard.domain.models import TableUsage
+from src.shared.domain.models import TableUsage
 from src.dashboard.presentation.components import create_error_message, create_usage_datatable
 
 

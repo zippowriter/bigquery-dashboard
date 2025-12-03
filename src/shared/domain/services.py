@@ -3,7 +3,7 @@
 テーブル利用統計に関するビジネスロジックを提供する。
 """
 
-from src.dashboard.domain.models import TableInfo, TableUsage
+from src.shared.domain.models import TableInfo, TableUsage
 
 
 class TableUsageService:

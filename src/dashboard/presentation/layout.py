@@ -8,13 +8,13 @@ from typing import Any
 from dash import dcc, html
 from google.api_core.exceptions import GoogleAPIError
 
-from src.dashboard.domain.logging import Logger
-from src.dashboard.domain.models import TableUsage
-from src.dashboard.domain.repositories import TableRepository
-from src.dashboard.domain.services import TableUsageService
-from src.dashboard.infra.bigquery import BigQueryTableRepository
-from src.dashboard.infra.lineage import LineageRepository, LineageRepositoryProtocol
-from src.dashboard.logging_config import get_logger
+from src.shared.domain.logging import Logger
+from src.shared.domain.models import TableUsage
+from src.shared.domain.repositories import TableRepository
+from src.shared.domain.services import TableUsageService
+from src.shared.infra.bigquery import BigQueryTableRepository
+from src.shared.infra.lineage import LineageRepository, LineageRepositoryProtocol
+from src.shared.logging_config import get_logger
 from src.dashboard.presentation.components import create_error_message, create_usage_datatable
 
 # ダッシュボードタイトル定数

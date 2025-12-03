@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.infra.csv_cache import CsvCacheRepository
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.infra.csv_cache import CsvCacheRepository
 
 
 class TestCsvCacheRepository:

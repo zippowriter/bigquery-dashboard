@@ -1,6 +1,6 @@
 """Dashアプリケーション作成のテスト。"""
 
-from src.dashboard.domain.models import TableInfo, TableUsage
+from src.shared.domain.models import TableInfo, TableUsage
 
 
 class FakeTableRepository:

@@ -1,7 +1,7 @@
 """TableUsageServiceのテスト。"""
 
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.domain.services import TableUsageService
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.domain.services import TableUsageService
 
 
 class TestMergeUsageData:

@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from google.api_core.exceptions import GoogleAPIError
 
-from src.dashboard.domain.models import TableInfo, TableUsage
-from src.dashboard.infra.bigquery import BigQueryTableRepository
+from src.shared.domain.models import TableInfo, TableUsage
+from src.shared.infra.bigquery import BigQueryTableRepository
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +63,7 @@ class TestFetchTables:
         mock_client.list_tables.side_effect = mock_list_tables
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             tables = repository.fetch_tables("test-project")
 
@@ -80,7 +80,7 @@ class TestFetchTables:
         mock_client.list_datasets.return_value = []
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             tables = repository.fetch_tables("test-project")
 
@@ -94,7 +94,7 @@ class TestFetchTables:
         mock_client.list_datasets.side_effect = GoogleAPIError("API Error")
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             with pytest.raises(GoogleAPIError):
                 repository.fetch_tables("test-project")
@@ -134,7 +134,7 @@ class TestFetchUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             usage_stats = repository.fetch_usage_stats("test-project", "region-us")
 
@@ -154,7 +154,7 @@ class TestFetchUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             usage_stats = repository.fetch_usage_stats("test-project", "region-us")
 
@@ -177,7 +177,7 @@ class TestFetchUsageStats:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             repository.fetch_usage_stats("test-project", region="region-asia-northeast1")
 
@@ -218,7 +218,7 @@ class TestFetchAll:
         mock_client.query.return_value = mock_query_job
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ):
             tables, usage_stats = repository.fetch_all("test-project", "region-us")
 
@@ -242,7 +242,7 @@ class TestClientSingleton:
         mock_client.list_datasets.return_value = []
 
         with patch(
-            "src.dashboard.infra.bigquery.bigquery.Client", return_value=mock_client
+            "src.shared.infra.bigquery.bigquery.Client", return_value=mock_client
         ) as mock_constructor:
             repository.fetch_tables("test-project")
             repository.fetch_tables("test-project")

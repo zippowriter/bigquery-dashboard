@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from src.dashboard.domain.models import TableInfo, TableUsage
+from src.shared.domain.models import TableInfo, TableUsage
 from src.dashboard.infra.cached_repository import CachedTableRepository
-from src.dashboard.infra.csv_cache import CsvCacheRepository
+from src.shared.infra.csv_cache import CsvCacheRepository
 
 
 class FakeBigQueryRepository:
