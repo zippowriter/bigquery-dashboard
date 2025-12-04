@@ -219,3 +219,50 @@ class TestFindLeafTablesFromRoots:
         assert len(result) == 1
         assert result[0].table_id == leaf
         assert result[0].table_id.project_id == "project-c"
+
+
+class TestParseBigqueryFqn:
+    """_parse_bigquery_fqnメソッドのテストクラス."""
+
+    @pytest.fixture
+    def mock_client_factory(self) -> Mock:
+        """モックClientFactoryのフィクスチャ."""
+        mock = Mock()
+        mock.location = "us"
+        return mock
+
+    @pytest.fixture
+    def repo(self, mock_client_factory: Mock) -> DataCatalogLineageRepository:
+        """リポジトリのフィクスチャ."""
+        return DataCatalogLineageRepository(mock_client_factory)
+
+    def test_normal_fqn(self, repo: DataCatalogLineageRepository) -> None:
+        """通常のFQN形式をパースできることを確認."""
+        result = repo._parse_bigquery_fqn("bigquery:project-a.dataset.table")
+        assert result is not None
+        assert result.project_id == "project-a"
+        assert result.dataset_id == "dataset"
+        assert result.table_id == "table"
+
+    def test_sharded_fqn(self, repo: DataCatalogLineageRepository) -> None:
+        """シャーディング形式のFQNをパースできることを確認."""
+        result = repo._parse_bigquery_fqn("bigquery:sharded:project-a.dataset.table")
+        assert result is not None
+        assert result.project_id == "project-a"
+        assert result.dataset_id == "dataset"
+        assert result.table_id == "table"
+
+    def test_non_bigquery_fqn(self, repo: DataCatalogLineageRepository) -> None:
+        """BigQuery以外のFQNでNoneが返ることを確認."""
+        result = repo._parse_bigquery_fqn("spanner:project.instance.database")
+        assert result is None
+
+    def test_invalid_parts_count(self, repo: DataCatalogLineageRepository) -> None:
+        """パーツ数が不正な場合Noneが返ることを確認."""
+        result = repo._parse_bigquery_fqn("bigquery:project.dataset")
+        assert result is None
+
+    def test_empty_string(self, repo: DataCatalogLineageRepository) -> None:
+        """空文字列でNoneが返ることを確認."""
+        result = repo._parse_bigquery_fqn("")
+        assert result is None

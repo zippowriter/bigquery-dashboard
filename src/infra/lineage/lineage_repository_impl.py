@@ -286,7 +286,9 @@ class DataCatalogLineageRepository:
         """Lineage APIのFQNからTableIdを解析する.
 
         Args:
-            fqn: Fully Qualified Name (例: "bigquery:project.dataset.table")
+            fqn: Fully Qualified Name
+                通常形式: "bigquery:project.dataset.table"
+                シャーディング形式: "bigquery:sharded:project.dataset.table"
 
         Returns:
             TableIdまたはNone（BigQueryテーブルでない場合）
@@ -294,7 +296,13 @@ class DataCatalogLineageRepository:
         if not fqn.startswith("bigquery:"):
             return None
 
-        table_path = fqn[9:]
+        # "bigquery:" プレフィックスを除去
+        table_path = fqn[9:]  # len("bigquery:") = 9
+
+        # "sharded:" プレフィックスがある場合は除去
+        if table_path.startswith("sharded:"):
+            table_path = table_path[8:]  # len("sharded:") = 8
+
         parts = table_path.split(".")
 
         if len(parts) != 3:
