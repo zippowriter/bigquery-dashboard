@@ -32,11 +32,14 @@ class TestFindLeafTablesFromRoots:
 
         root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
 
-        with patch.object(
-            repo, "_search_downstream_tables", return_value=[]
-        ) as mock_downstream, patch.object(
-            repo, "_search_upstream_tables", return_value=[]
-        ) as mock_upstream:
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", return_value=[]
+            ) as mock_downstream,
+            patch.object(
+                repo, "_search_upstream_tables", return_value=[]
+            ) as mock_upstream,
+        ):
             result = repo.find_leaf_tables_from_roots([root])
 
         assert len(result) == 1
@@ -63,9 +66,12 @@ class TestFindLeafTablesFromRoots:
                 return [root]
             return []
 
-        with patch.object(
-            repo, "_search_downstream_tables", side_effect=mock_downstream
-        ), patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream):
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
             result = repo.find_leaf_tables_from_roots([root])
 
         assert len(result) == 1
@@ -77,8 +83,12 @@ class TestFindLeafTablesFromRoots:
         repo = DataCatalogLineageRepository(mock_client_factory)
 
         root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
-        leaf1 = TableId(project_id="project-a", dataset_id="reports", table_id="report1")
-        leaf2 = TableId(project_id="project-a", dataset_id="reports", table_id="report2")
+        leaf1 = TableId(
+            project_id="project-a", dataset_id="reports", table_id="report1"
+        )
+        leaf2 = TableId(
+            project_id="project-a", dataset_id="reports", table_id="report2"
+        )
 
         # rootから2つのリーフへ分岐
         def mock_downstream(client, project_id, fqn):
@@ -89,9 +99,12 @@ class TestFindLeafTablesFromRoots:
         def mock_upstream(client, project_id, fqn):
             return [root]
 
-        with patch.object(
-            repo, "_search_downstream_tables", side_effect=mock_downstream
-        ), patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream):
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
             result = repo.find_leaf_tables_from_roots([root])
 
         assert len(result) == 2
@@ -158,9 +171,12 @@ class TestFindLeafTablesFromRoots:
                     return [tables[i - 1]]
             return []
 
-        with patch.object(
-            repo, "_search_downstream_tables", side_effect=mock_downstream
-        ), patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream):
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
             result = repo.find_leaf_tables_from_roots([tables[0]])
 
         assert len(result) == 1
@@ -172,7 +188,9 @@ class TestFindLeafTablesFromRoots:
         repo = DataCatalogLineageRepository(mock_client_factory)
 
         root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
-        middle = TableId(project_id="project-b", dataset_id="staging", table_id="events")
+        middle = TableId(
+            project_id="project-b", dataset_id="staging", table_id="events"
+        )
         leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
 
         # project-a -> project-b -> project-c
@@ -190,9 +208,12 @@ class TestFindLeafTablesFromRoots:
                 return [root]
             return []
 
-        with patch.object(
-            repo, "_search_downstream_tables", side_effect=mock_downstream
-        ), patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream):
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
             result = repo.find_leaf_tables_from_roots([root])
 
         assert len(result) == 1

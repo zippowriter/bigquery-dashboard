@@ -28,7 +28,9 @@ class ExportLeafTablesRequest:
     def __post_init__(self) -> None:
         """バリデーション."""
         if self.project_ids is None and self.root_tables is None:
-            raise ValueError("project_ids または root_tables のどちらかを指定してください")
+            raise ValueError(
+                "project_ids または root_tables のどちらかを指定してください"
+            )
         if self.project_ids is not None and self.root_tables is not None:
             raise ValueError("project_ids と root_tables は同時に指定できません")
 

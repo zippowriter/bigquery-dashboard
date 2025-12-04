@@ -25,18 +25,20 @@
 **Purpose**: 外部サービスとの接続実装
 **依存**: domain, 外部ライブラリ
 
-- `bigquery/`: BigQuery 関連の実装
-  - `client.py`: クライアントファクトリ
-  - `queries/`: SQL クエリビルダー
-  - `*_repository_impl.py`: リポジトリ実装
+サブディレクトリは外部サービス単位で分割:
+- `bigquery/`: BigQuery API 関連
+- `lineage/`: Data Catalog Lineage API 関連
+- `file/`: ファイル I/O 関連
 
-### SQL Queries (`/sql/`)
-**Purpose**: 生 SQL ファイル（複雑なクエリ用）
-**Naming**: `{purpose}.sql` (snake_case)
+**共通パターン**:
+- `client.py`: クライアントファクトリ
+- `*_repository_impl.py`: domain の Protocol 実装
+- `exceptions.py`: インフラ層固有の例外
+- `queries/`: SQL クエリビルダー（BigQuery のみ）
 
-### Data Files (`/source_data/`)
-**Purpose**: キャッシュされた CSV データ
-**Note**: .gitignore 対象
+### Output Files (`/output/`)
+**Purpose**: 実行結果の出力ファイル（CSV, JSON など）
+**Note**: .gitignore 対象推奨
 
 ## Naming Conventions
 

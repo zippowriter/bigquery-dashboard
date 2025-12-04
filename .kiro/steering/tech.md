@@ -13,6 +13,7 @@
 ## Key Libraries
 
 - **google-cloud-bigquery**: BigQuery API クライアント
+- **google-cloud-datacatalog-lineage**: Data Catalog Lineage API クライアント
 - **pydantic**: データバリデーション・モデル定義
 - **pandas**: データ加工・分析
 - **streamlit**: インタラクティブダッシュボード
