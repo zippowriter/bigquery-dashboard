@@ -27,7 +27,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dashboard", "src/shared", "src/batch", "app.py", "batch.py"]
+packages = ["src/domain", "src/infra", "src/application"]
 
 [tool.pytest.ini_options]
 addopts = [
@@ -40,6 +40,7 @@ filterwarnings = [
 python_classes = ["Test*"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
+pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.setuptools.packages.find]

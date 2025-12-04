@@ -88,8 +88,7 @@ class BigQueryTableRepository:
         if not tables:
             return []
 
-        project_ids = list({t.table_id.project_id for t in tables})
-        query = build_reference_count_query(project_ids, days_back)
+        query = build_reference_count_query(days_back)
 
         try:
             with self._client_factory.get_client() as client:
