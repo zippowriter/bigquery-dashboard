@@ -1,0 +1,244 @@
+"""Lineage APIを使用したLineageRepositoryの実装."""
+
+from collections.abc import Sequence
+
+from google.api_core.exceptions import GoogleAPIError
+from google.cloud.datacatalog_lineage_v1 import (
+    EntityReference,
+    LineageClient,
+    SearchLinksRequest,
+)
+
+from domain.entities.lineage import LeafTable, TableLineageInfo
+from domain.value_objects.table_id import TableId
+from infra.lineage.client import LineageClientFactory
+from infra.lineage.exceptions import LineageApiError, LineageRepositoryError
+
+
+class DataCatalogLineageRepository:
+    """Lineage APIを使用したLineageRepositoryの実装."""
+
+    def __init__(self, client_factory: LineageClientFactory) -> None:
+        """初期化.
+
+        Args:
+            client_factory: Lineage APIクライアントファクトリ
+        """
+        self._client_factory = client_factory
+
+    def get_table_lineage(self, table_id: TableId) -> TableLineageInfo:
+        """指定されたテーブルのリネージ情報を取得する.
+
+        Args:
+            table_id: 対象テーブルのID
+
+        Returns:
+            TableLineageInfo エンティティ
+
+        Raises:
+            LineageRepositoryError: リネージ情報取得に失敗した場合
+        """
+        try:
+            with self._client_factory.get_client() as client:
+                fqn = self._build_bigquery_fqn(table_id)
+
+                upstream_tables = self._search_upstream_tables(
+                    client, table_id.project_id, fqn
+                )
+
+                downstream_tables = self._search_downstream_tables(
+                    client, table_id.project_id, fqn
+                )
+
+                return TableLineageInfo(
+                    table_id=table_id,
+                    upstream_tables=upstream_tables,
+                    downstream_tables=downstream_tables,
+                    is_leaf=len(downstream_tables) == 0,
+                )
+
+        except LineageApiError as e:
+            raise LineageRepositoryError(
+                f"テーブル {table_id} のリネージ情報取得に失敗しました: {e}",
+                cause=e,
+            ) from e
+
+    def get_leaf_tables(
+        self,
+        table_ids: Sequence[TableId],
+    ) -> list[LeafTable]:
+        """指定されたテーブルの中からリーフノードを特定する.
+
+        Args:
+            table_ids: 対象テーブルIDのリスト
+
+        Returns:
+            LeafTable エンティティのリスト
+
+        Raises:
+            LineageRepositoryError: リーフノード判定に失敗した場合
+        """
+        if not table_ids:
+            return []
+
+        leaf_tables: list[LeafTable] = []
+
+        try:
+            with self._client_factory.get_client() as client:
+                for table_id in table_ids:
+                    fqn = self._build_bigquery_fqn(table_id)
+
+                    downstream_tables = self._search_downstream_tables(
+                        client, table_id.project_id, fqn
+                    )
+
+                    if len(downstream_tables) == 0:
+                        upstream_tables = self._search_upstream_tables(
+                            client, table_id.project_id, fqn
+                        )
+
+                        leaf_tables.append(
+                            LeafTable(
+                                table_id=table_id,
+                                upstream_count=len(upstream_tables),
+                            )
+                        )
+
+            return leaf_tables
+
+        except LineageApiError as e:
+            raise LineageRepositoryError(
+                f"リーフノード判定に失敗しました: {e}",
+                cause=e,
+            ) from e
+
+    def _build_bigquery_fqn(self, table_id: TableId) -> str:
+        """BigQueryテーブルのFully Qualified Nameを構築する.
+
+        Args:
+            table_id: テーブルID
+
+        Returns:
+            Lineage API用のFQN (例: "bigquery:project.dataset.table")
+        """
+        return (
+            f"bigquery:{table_id.project_id}.{table_id.dataset_id}.{table_id.table_id}"
+        )
+
+    def _search_upstream_tables(
+        self,
+        client: LineageClient,
+        project_id: str,
+        target_fqn: str,
+    ) -> list[TableId]:
+        """上流テーブル（このテーブルを作成するためのソーステーブル）を検索する.
+
+        Args:
+            client: Lineage APIクライアント
+            project_id: 検索対象プロジェクトID
+            target_fqn: 対象テーブルのFQN
+
+        Returns:
+            上流テーブルIDのリスト
+
+        Raises:
+            LineageApiError: API呼び出しに失敗した場合
+        """
+        try:
+            parent = f"projects/{project_id}/locations/{self._client_factory.location}"
+
+            target_ref = EntityReference()
+            target_ref.fully_qualified_name = target_fqn
+
+            request = SearchLinksRequest(
+                parent=parent,
+                target=target_ref,
+            )
+
+            upstream_tables: list[TableId] = []
+
+            for link in client.search_links(request=request):
+                source_fqn = link.source.fully_qualified_name
+                table_id = self._parse_bigquery_fqn(source_fqn)
+                if table_id is not None:
+                    upstream_tables.append(table_id)
+
+            return upstream_tables
+
+        except GoogleAPIError as e:
+            raise LineageApiError(
+                f"上流テーブル検索に失敗しました: {e}",
+                operation="search_links (upstream)",
+                cause=e,
+            ) from e
+
+    def _search_downstream_tables(
+        self,
+        client: LineageClient,
+        project_id: str,
+        source_fqn: str,
+    ) -> list[TableId]:
+        """下流テーブル（このテーブルを参照しているテーブル）を検索する.
+
+        Args:
+            client: Lineage APIクライアント
+            project_id: 検索対象プロジェクトID
+            source_fqn: 対象テーブルのFQN
+
+        Returns:
+            下流テーブルIDのリスト
+
+        Raises:
+            LineageApiError: API呼び出しに失敗した場合
+        """
+        try:
+            parent = f"projects/{project_id}/locations/{self._client_factory.location}"
+
+            source_ref = EntityReference()
+            source_ref.fully_qualified_name = source_fqn
+
+            request = SearchLinksRequest(
+                parent=parent,
+                source=source_ref,
+            )
+
+            downstream_tables: list[TableId] = []
+
+            for link in client.search_links(request=request):
+                target_fqn = link.target.fully_qualified_name
+                table_id = self._parse_bigquery_fqn(target_fqn)
+                if table_id is not None:
+                    downstream_tables.append(table_id)
+
+            return downstream_tables
+
+        except GoogleAPIError as e:
+            raise LineageApiError(
+                f"下流テーブル検索に失敗しました: {e}",
+                operation="search_links (downstream)",
+                cause=e,
+            ) from e
+
+    def _parse_bigquery_fqn(self, fqn: str) -> TableId | None:
+        """Lineage APIのFQNからTableIdを解析する.
+
+        Args:
+            fqn: Fully Qualified Name (例: "bigquery:project.dataset.table")
+
+        Returns:
+            TableIdまたはNone（BigQueryテーブルでない場合）
+        """
+        if not fqn.startswith("bigquery:"):
+            return None
+
+        table_path = fqn[9:]
+        parts = table_path.split(".")
+
+        if len(parts) != 3:
+            return None
+
+        return TableId(
+            project_id=parts[0],
+            dataset_id=parts[1],
+            table_id=parts[2],
+        )
