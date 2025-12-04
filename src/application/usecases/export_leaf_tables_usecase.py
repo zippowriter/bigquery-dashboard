@@ -8,15 +8,29 @@ from typing import Literal
 from domain.repositories.file_writer_repository import FileWriterRepository
 from domain.repositories.lineage_repository import LineageRepository
 from domain.repositories.table_repository import TableRepository
+from domain.value_objects.table_id import TableId
 
 
 @dataclass
 class ExportLeafTablesRequest:
-    """エクスポートリクエスト."""
+    """エクスポートリクエスト.
 
-    project_ids: Sequence[str]
+    project_ids と root_tables は排他的に指定する。
+    - project_ids: プロジェクト内の全テーブルからリーフを抽出
+    - root_tables: 指定したルートテーブルから下流を辿ってリーフを抽出
+    """
+
+    project_ids: Sequence[str] | None = None
+    root_tables: Sequence[TableId] | None = None
     output_path: Path = Path("output/leaf_tables.csv")
     output_format: Literal["csv", "json"] = "csv"
+
+    def __post_init__(self) -> None:
+        """バリデーション."""
+        if self.project_ids is None and self.root_tables is None:
+            raise ValueError("project_ids または root_tables のどちらかを指定してください")
+        if self.project_ids is not None and self.root_tables is not None:
+            raise ValueError("project_ids と root_tables は同時に指定できません")
 
 
 @dataclass
@@ -68,16 +82,22 @@ class ExportLeafTablesUseCase:
             LineageRepositoryError: リネージ情報取得に失敗した場合
             FileWriterError: ファイル出力に失敗した場合
         """
-        # 1. テーブル一覧を取得
-        tables = self._table_repository.list_tables(request.project_ids)
+        if request.root_tables is not None:
+            # ルートテーブルから下流を辿ってリーフを取得
+            leaf_tables = self._lineage_repository.find_leaf_tables_from_roots(
+                request.root_tables
+            )
+            total_count = len(request.root_tables)
+        else:
+            # プロジェクト内の全テーブルからリーフを抽出
+            # __post_init__のバリデーションにより、ここではproject_idsは必ずNoneではない
+            assert request.project_ids is not None
+            tables = self._table_repository.list_tables(request.project_ids)
+            table_ids = [table.table_id for table in tables]
+            leaf_tables = self._lineage_repository.get_leaf_tables(table_ids)
+            total_count = len(tables)
 
-        # 2. テーブルIDのリストを作成
-        table_ids = [table.table_id for table in tables]
-
-        # 3. リーフテーブルを特定
-        leaf_tables = self._lineage_repository.get_leaf_tables(table_ids)
-
-        # 4. ファイルに出力
+        # ファイルに出力
         self._file_writer.write_leaf_tables(
             leaf_tables,
             request.output_path,
@@ -85,7 +105,7 @@ class ExportLeafTablesUseCase:
         )
 
         return ExportLeafTablesResult(
-            total_tables_count=len(tables),
+            total_tables_count=total_count,
             leaf_tables_count=len(leaf_tables),
             output_path=request.output_path,
         )

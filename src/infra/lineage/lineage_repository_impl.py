@@ -1,5 +1,6 @@
 """Lineage APIを使用したLineageRepositoryの実装."""
 
+from collections import deque
 from collections.abc import Sequence
 
 from google.api_core.exceptions import GoogleAPIError
@@ -109,6 +110,68 @@ class DataCatalogLineageRepository:
         except LineageApiError as e:
             raise LineageRepositoryError(
                 f"リーフノード判定に失敗しました: {e}",
+                cause=e,
+            ) from e
+
+    def find_leaf_tables_from_roots(
+        self,
+        root_tables: Sequence[TableId],
+    ) -> list[LeafTable]:
+        """指定されたルートテーブルから下流を辿り、リーフノードを取得する.
+
+        BFS（幅優先探索）でルートテーブルから下流を辿り、
+        下流を持たないテーブル（リーフノード）を収集する。
+
+        Args:
+            root_tables: 探索の起点となるテーブルIDのリスト
+
+        Returns:
+            LeafTable エンティティのリスト
+
+        Raises:
+            LineageRepositoryError: リーフノード探索に失敗した場合
+        """
+        if not root_tables:
+            return []
+
+        leaf_tables: list[LeafTable] = []
+        visited: set[str] = set()
+        queue: deque[TableId] = deque(root_tables)
+
+        try:
+            with self._client_factory.get_client() as client:
+                while queue:
+                    current = queue.popleft()
+                    fqn = self._build_bigquery_fqn(current)
+
+                    if fqn in visited:
+                        continue
+                    visited.add(fqn)
+
+                    downstream = self._search_downstream_tables(
+                        client, current.project_id, fqn
+                    )
+
+                    if not downstream:
+                        upstream = self._search_upstream_tables(
+                            client, current.project_id, fqn
+                        )
+                        leaf_tables.append(
+                            LeafTable(
+                                table_id=current,
+                                upstream_count=len(upstream),
+                            )
+                        )
+                    else:
+                        for dt in downstream:
+                            if self._build_bigquery_fqn(dt) not in visited:
+                                queue.append(dt)
+
+            return leaf_tables
+
+        except LineageApiError as e:
+            raise LineageRepositoryError(
+                f"ルートからのリーフノード探索に失敗しました: {e}",
                 cause=e,
             ) from e
 

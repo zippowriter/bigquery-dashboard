@@ -42,3 +42,24 @@ class LineageRepository(Protocol):
             LineageRepositoryError: リーフノード判定に失敗した場合
         """
         ...
+
+    def find_leaf_tables_from_roots(
+        self,
+        root_tables: Sequence[TableId],
+    ) -> list[LeafTable]:
+        """指定されたルートテーブルから下流を辿り、リーフノードを取得する.
+
+        BFS（幅優先探索）でルートテーブルから下流を辿り、
+        下流を持たないテーブル（リーフノード）を収集する。
+        訪問済みテーブルをスキップすることで循環参照に対応する。
+
+        Args:
+            root_tables: 探索の起点となるテーブルIDのリスト
+
+        Returns:
+            LeafTable エンティティのリスト
+
+        Raises:
+            LineageRepositoryError: リーフノード探索に失敗した場合
+        """
+        ...
