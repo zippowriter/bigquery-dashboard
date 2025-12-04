@@ -220,6 +220,118 @@ class TestFindLeafTablesFromRoots:
         assert result[0].table_id == leaf
         assert result[0].table_id.project_id == "project-c"
 
+    def test_project_filtering_skips_outside_projects(
+        self, mock_client_factory: Mock
+    ) -> None:
+        """許可されたプロジェクト外のテーブルをスキップすることを確認."""
+        repo = DataCatalogLineageRepository(mock_client_factory)
+
+        root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
+        middle = TableId(
+            project_id="project-b", dataset_id="staging", table_id="events"
+        )
+        leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
+
+        # project-a -> project-b -> project-c
+        def mock_downstream(client, project_id, fqn):
+            if "project-a" in fqn:
+                return [middle]
+            elif "project-b" in fqn:
+                return [leaf]
+            return []
+
+        def mock_upstream(client, project_id, fqn):
+            return []
+
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
+            # project-a のみ許可 → project-b に到達した時点で探索終了
+            # project-a がリーフとして扱われる
+            result = repo.find_leaf_tables_from_roots(
+                [root], allowed_project_ids=["project-a"]
+            )
+
+        assert len(result) == 1
+        assert result[0].table_id == root
+        assert result[0].table_id.project_id == "project-a"
+
+    def test_project_filtering_allows_multiple_projects(
+        self, mock_client_factory: Mock
+    ) -> None:
+        """複数プロジェクトを許可した場合の探索を確認."""
+        repo = DataCatalogLineageRepository(mock_client_factory)
+
+        root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
+        middle = TableId(
+            project_id="project-b", dataset_id="staging", table_id="events"
+        )
+        leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
+
+        # project-a -> project-b -> project-c
+        def mock_downstream(client, project_id, fqn):
+            if "project-a" in fqn:
+                return [middle]
+            elif "project-b" in fqn:
+                return [leaf]
+            return []
+
+        def mock_upstream(client, project_id, fqn):
+            if "project-b" in fqn:
+                return [root]
+            return []
+
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
+            # project-a と project-b を許可 → project-c に到達した時点で探索終了
+            # project-b がリーフとして扱われる
+            result = repo.find_leaf_tables_from_roots(
+                [root], allowed_project_ids=["project-a", "project-b"]
+            )
+
+        assert len(result) == 1
+        assert result[0].table_id == middle
+        assert result[0].table_id.project_id == "project-b"
+
+    def test_project_filtering_none_allows_all(
+        self, mock_client_factory: Mock
+    ) -> None:
+        """allowed_project_ids=None の場合は全プロジェクトを探索することを確認."""
+        repo = DataCatalogLineageRepository(mock_client_factory)
+
+        root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
+        leaf = TableId(project_id="project-b", dataset_id="reports", table_id="final")
+
+        def mock_downstream(client, project_id, fqn):
+            if "project-a" in fqn:
+                return [leaf]
+            return []
+
+        def mock_upstream(client, project_id, fqn):
+            if "project-b" in fqn:
+                return [root]
+            return []
+
+        with (
+            patch.object(
+                repo, "_search_downstream_tables", side_effect=mock_downstream
+            ),
+            patch.object(repo, "_search_upstream_tables", side_effect=mock_upstream),
+        ):
+            # allowed_project_ids=None なので全プロジェクトを探索
+            result = repo.find_leaf_tables_from_roots([root], allowed_project_ids=None)
+
+        assert len(result) == 1
+        assert result[0].table_id == leaf
+        assert result[0].table_id.project_id == "project-b"
+
 
 class TestParseBigqueryFqn:
     """_parse_bigquery_fqnメソッドのテストクラス."""

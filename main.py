@@ -24,15 +24,18 @@ usecase = ExportLeafTablesUseCase(table_repo, lineage_repo, file_writer)
 # ルートテーブルを指定してリーフノードを取得
 root_tables = [
     TableId(
-        project_id="abematv-analysis",
-        dataset_id="abematv_action_raw",
-        table_id="abematv_mine_activity",
+        project_id="project-id",
+        dataset_id="dataset-id",
+        table_id="table-id",
     ),
 ]
+
+allowed_project_ids = ["project-id-1", "project-id-2", "project-id-3"]
 
 result = usecase.execute(
     ExportLeafTablesRequest(
         root_tables=root_tables,
+        allowed_project_ids=allowed_project_ids,
         output_path=Path("output/leaf_tables_from_roots.csv"),
         output_format="csv",
     )

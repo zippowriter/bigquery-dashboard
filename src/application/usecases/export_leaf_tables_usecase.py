@@ -18,10 +18,13 @@ class ExportLeafTablesRequest:
     project_ids と root_tables は排他的に指定する。
     - project_ids: プロジェクト内の全テーブルからリーフを抽出
     - root_tables: 指定したルートテーブルから下流を辿ってリーフを抽出
+
+    allowed_project_ids を指定すると、リネージ探索を許可されたプロジェクト内に制限する。
     """
 
     project_ids: Sequence[str] | None = None
     root_tables: Sequence[TableId] | None = None
+    allowed_project_ids: Sequence[str] | None = None
     output_path: Path = Path("output/leaf_tables.csv")
     output_format: Literal["csv", "json"] = "csv"
 
@@ -87,7 +90,8 @@ class ExportLeafTablesUseCase:
         if request.root_tables is not None:
             # ルートテーブルから下流を辿ってリーフを取得
             leaf_tables = self._lineage_repository.find_leaf_tables_from_roots(
-                request.root_tables
+                request.root_tables,
+                allowed_project_ids=request.allowed_project_ids,
             )
             total_count = len(request.root_tables)
         else:
@@ -96,7 +100,10 @@ class ExportLeafTablesUseCase:
             assert request.project_ids is not None
             tables = self._table_repository.list_tables(request.project_ids)
             table_ids = [table.table_id for table in tables]
-            leaf_tables = self._lineage_repository.get_leaf_tables(table_ids)
+            leaf_tables = self._lineage_repository.get_leaf_tables(
+                table_ids,
+                allowed_project_ids=request.allowed_project_ids,
+            )
             total_count = len(tables)
 
         # ファイルに出力
