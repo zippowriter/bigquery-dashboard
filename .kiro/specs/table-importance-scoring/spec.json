@@ -1,0 +1,12 @@
+{
+  "name": "table-importance-scoring",
+  "description": "BigQueryのテーブル重要度をスコアリングするアプリケーション。クエリ実行によるデータ取得とリネージAPI経由の依存関係取得を行い、各テーブルの重要度を算出する",
+  "language": "ja",
+  "createdAt": "2025-12-04T12:00:00Z",
+  "status": {
+    "requirements": "not_started",
+    "design": "not_started",
+    "tasks": "not_started",
+    "implementation": "not_started"
+  }
+}
