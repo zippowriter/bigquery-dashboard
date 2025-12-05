@@ -55,7 +55,6 @@ class DataCatalogLineageRepository:
                     table_id=table_id,
                     upstream_tables=upstream_tables,
                     downstream_tables=downstream_tables,
-                    is_leaf=len(downstream_tables) == 0,
                 )
 
         except LineageApiError as e:
