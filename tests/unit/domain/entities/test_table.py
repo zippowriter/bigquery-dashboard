@@ -24,6 +24,42 @@ class TestTable:
         table = Table(table_id=table_id, table_type="VIEW")
         assert table.is_base_table() is False
 
+    def test_equality_based_on_table_id(self, table_id: TableId) -> None:
+        """同じtable_idを持つTableは等価とみなされる."""
+        table1 = Table(table_id=table_id, table_type="BASE TABLE")
+        table2 = Table(table_id=table_id, table_type="VIEW")
+        assert table1 == table2
+
+    def test_inequality_with_different_table_id(self) -> None:
+        """異なるtable_idを持つTableは等価ではない."""
+        table1 = Table(
+            table_id=TableId(project_id="p1", dataset_id="d1", table_id="t1"),
+            table_type="BASE TABLE",
+        )
+        table2 = Table(
+            table_id=TableId(project_id="p2", dataset_id="d2", table_id="t2"),
+            table_type="BASE TABLE",
+        )
+        assert table1 != table2
+
+    def test_hash_based_on_table_id(self, table_id: TableId) -> None:
+        """同じtable_idを持つTableは同じハッシュ値を持つ."""
+        table1 = Table(table_id=table_id, table_type="BASE TABLE")
+        table2 = Table(table_id=table_id, table_type="VIEW")
+        assert hash(table1) == hash(table2)
+
+    def test_can_be_used_in_set(self, table_id: TableId) -> None:
+        """Tableをsetで使用できる."""
+        table1 = Table(table_id=table_id, table_type="BASE TABLE")
+        table2 = Table(table_id=table_id, table_type="VIEW")
+        table_set = {table1, table2}
+        assert len(table_set) == 1
+
+    def test_id_property_returns_table_id(self, table_id: TableId) -> None:
+        """idプロパティがtable_idを返す."""
+        table = Table(table_id=table_id, table_type="BASE TABLE")
+        assert table.id == table_id
+
 
 class TestCheckedTable:
     """CheckedTableエンティティのテスト."""

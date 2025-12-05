@@ -1,7 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel
-
+from domain.entities.base import Entity
 from domain.value_objects.table_id import TableId
 
 
@@ -15,11 +14,20 @@ TableType = Literal[
 ]
 
 
-class Table(BaseModel):
+class Table(Entity[TableId]):
     """BigQueryのテーブルのモデル"""
 
     table_id: TableId
     table_type: TableType
+
+    @property
+    def id(self) -> TableId:
+        """エンティティの識別子を返す."""
+        return self.table_id
+
+    def __hash__(self) -> int:
+        """識別子に基づいてハッシュ値を計算する."""
+        return hash(self.id)
 
     def is_base_table(self) -> bool:
         """ベーステーブルかどうか."""

@@ -1,11 +1,12 @@
 """リネージ関連のドメインエンティティ."""
 
-from pydantic import BaseModel, computed_field
+from pydantic import computed_field
 
+from domain.entities.base import Entity
 from domain.value_objects.table_id import TableId
 
 
-class LineageNode(BaseModel):
+class LineageNode(Entity[TableId]):
     """テーブルのリネージ情報を表すエンティティ.
 
     あるテーブルの上流（参照元）と下流（参照先）の関係を保持する。
@@ -14,6 +15,11 @@ class LineageNode(BaseModel):
     table_id: TableId
     upstream_tables: list[TableId]
     downstream_tables: list[TableId]
+
+    @property
+    def id(self) -> TableId:
+        """エンティティの識別子を返す."""
+        return self.table_id
 
     @computed_field
     @property
@@ -30,7 +36,7 @@ class LineageNode(BaseModel):
         return len(self.downstream_tables) > 0
 
 
-class LeafTable(BaseModel):
+class LeafTable(Entity[TableId]):
     """リーフノードと判定されたテーブル.
 
     他のテーブルから参照されていない末端テーブルを表す。
@@ -38,6 +44,11 @@ class LeafTable(BaseModel):
 
     table_id: TableId
     upstream_count: int
+
+    @property
+    def id(self) -> TableId:
+        """エンティティの識別子を返す."""
+        return self.table_id
 
     def has_dependencies(self) -> bool:
         """上流依存があるか."""
