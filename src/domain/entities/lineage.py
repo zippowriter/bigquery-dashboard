@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from domain.value_objects.table_id import TableId
 
 
-class TableLineageInfo(BaseModel):
+class LineageNode(BaseModel):
     """テーブルのリネージ情報を表すエンティティ.
 
     あるテーブルの上流（参照元）と下流（参照先）の関係を保持する。

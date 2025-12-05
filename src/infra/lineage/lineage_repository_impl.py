@@ -10,7 +10,7 @@ from google.cloud.datacatalog_lineage_v1 import (
     SearchLinksRequest,
 )
 
-from domain.entities.lineage import LeafTable, TableLineageInfo
+from domain.entities.lineage import LeafTable, LineageNode
 from domain.value_objects.table_id import TableId
 from infra.lineage.client import LineageClientFactory
 from infra.lineage.exceptions import LineageApiError, LineageRepositoryError
@@ -27,14 +27,14 @@ class DataCatalogLineageRepository:
         """
         self._client_factory = client_factory
 
-    def get_table_lineage(self, table_id: TableId) -> TableLineageInfo:
+    def get_table_lineage(self, table_id: TableId) -> LineageNode:
         """指定されたテーブルのリネージ情報を取得する.
 
         Args:
             table_id: 対象テーブルのID
 
         Returns:
-            TableLineageInfo エンティティ
+            LineageNode エンティティ
 
         Raises:
             LineageRepositoryError: リネージ情報取得に失敗した場合
@@ -51,7 +51,7 @@ class DataCatalogLineageRepository:
                     client, table_id.project_id, fqn
                 )
 
-                return TableLineageInfo(
+                return LineageNode(
                     table_id=table_id,
                     upstream_tables=upstream_tables,
                     downstream_tables=downstream_tables,

@@ -3,21 +3,21 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from domain.entities.lineage import LeafTable, TableLineageInfo
+from domain.entities.lineage import LeafTable, LineageNode
 from domain.value_objects.table_id import TableId
 
 
 class LineageRepository(Protocol):
     """リネージ情報を取得するリポジトリのインターフェース."""
 
-    def get_table_lineage(self, table_id: TableId) -> TableLineageInfo:
+    def get_table_lineage(self, table_id: TableId) -> LineageNode:
         """指定されたテーブルのリネージ情報を取得する.
 
         Args:
             table_id: 対象テーブルのID
 
         Returns:
-            TableLineageInfo エンティティ
+            LineageNode エンティティ
 
         Raises:
             LineageRepositoryError: リネージ情報取得に失敗した場合
