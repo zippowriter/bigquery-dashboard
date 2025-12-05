@@ -1,5 +1,6 @@
 """DataCatalogLineageRepositoryのユニットテスト."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -56,12 +57,12 @@ class TestFindLeafTablesFromRoots:
         leaf = TableId(project_id="project-a", dataset_id="reports", table_id="final")
 
         # rootの下流はleaf、leafの下流は空
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "events" in fqn:
                 return [leaf]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "final" in fqn:
                 return [root]
             return []
@@ -91,12 +92,12 @@ class TestFindLeafTablesFromRoots:
         )
 
         # rootから2つのリーフへ分岐
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "events" in fqn:
                 return [leaf1, leaf2]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             return [root]
 
         with (
@@ -121,7 +122,7 @@ class TestFindLeafTablesFromRoots:
         table_c = TableId(project_id="project-a", dataset_id="raw", table_id="table_c")
 
         # A -> B -> C -> A (循環)
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "table_a" in fqn:
                 return [table_b]
             elif "table_b" in fqn:
@@ -132,7 +133,9 @@ class TestFindLeafTablesFromRoots:
 
         call_count = 0
 
-        def counting_downstream(client, project_id, fqn):
+        def counting_downstream(
+            client: Any, project_id: Any, fqn: Any
+        ) -> list[TableId]:
             nonlocal call_count
             call_count += 1
             if call_count > 10:
@@ -159,13 +162,13 @@ class TestFindLeafTablesFromRoots:
         ]
 
         # table_0 -> table_1 -> table_2 -> table_3 -> table_4 (leaf)
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             for i in range(4):
                 if f"table_{i}" in fqn:
                     return [tables[i + 1]]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             for i in range(1, 5):
                 if f"table_{i}" in fqn:
                     return [tables[i - 1]]
@@ -194,14 +197,14 @@ class TestFindLeafTablesFromRoots:
         leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
 
         # project-a -> project-b -> project-c
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-a" in fqn:
                 return [middle]
             elif "project-b" in fqn:
                 return [leaf]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-c" in fqn:
                 return [middle]
             elif "project-b" in fqn:
@@ -233,14 +236,14 @@ class TestFindLeafTablesFromRoots:
         leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
 
         # project-a -> project-b -> project-c
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-a" in fqn:
                 return [middle]
             elif "project-b" in fqn:
                 return [leaf]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             return []
 
         with (
@@ -272,14 +275,14 @@ class TestFindLeafTablesFromRoots:
         leaf = TableId(project_id="project-c", dataset_id="reports", table_id="final")
 
         # project-a -> project-b -> project-c
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-a" in fqn:
                 return [middle]
             elif "project-b" in fqn:
                 return [leaf]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-b" in fqn:
                 return [root]
             return []
@@ -307,12 +310,12 @@ class TestFindLeafTablesFromRoots:
         root = TableId(project_id="project-a", dataset_id="raw", table_id="events")
         leaf = TableId(project_id="project-b", dataset_id="reports", table_id="final")
 
-        def mock_downstream(client, project_id, fqn):
+        def mock_downstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-a" in fqn:
                 return [leaf]
             return []
 
-        def mock_upstream(client, project_id, fqn):
+        def mock_upstream(client: Any, project_id: Any, fqn: Any) -> list[TableId]:
             if "project-b" in fqn:
                 return [root]
             return []

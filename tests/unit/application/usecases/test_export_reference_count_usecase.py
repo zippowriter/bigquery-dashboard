@@ -1,8 +1,6 @@
 """ExportReferenceCountUseCaseのユニットテスト."""
 
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal
 from unittest.mock import Mock
 
 import pytest
@@ -110,7 +108,7 @@ class TestExportReferenceCountUseCase:
             output_format="json",
         )
 
-        result = usecase.execute(request)
+        usecase.execute(request)
 
         # ファイル出力がJSON形式で呼び出されたことを確認
         call_args = mock_file_writer.write_checked_tables.call_args
