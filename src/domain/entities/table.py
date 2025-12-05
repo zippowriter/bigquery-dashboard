@@ -11,18 +11,14 @@ class Table(BaseModel):
     table_type: TableType
 
 
-class CheckedTable(BaseModel):
+class CheckedTable(Table):
     """参照回数が調べられたテーブルのモデル"""
 
-    table_id: TableId
-    table_type: TableType
     job_count: int
     unique_user: int
 
 
-class CandidateTable(BaseModel):
+class CandidateTable(Table):
     """削除候補となるテーブルのモデル"""
 
-    table_id: TableId
-    table_type: TableType
     data_owner: str
