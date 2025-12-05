@@ -3,7 +3,8 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from domain.entities.table import CheckedTable, Table
+from domain.entities.analyzed_table import AnalyzedTable
+from domain.entities.table import Table
 
 
 class TableRepository(Protocol):
@@ -27,7 +28,7 @@ class TableRepository(Protocol):
         self,
         tables: Sequence[Table],
         days_back: int = 90,
-    ) -> list[CheckedTable]:
+    ) -> list[AnalyzedTable]:
         """テーブルの参照回数とユニークユーザー数を取得する.
 
         Args:
@@ -35,7 +36,7 @@ class TableRepository(Protocol):
             days_back: 過去何日分のジョブを調査するか（デフォルト: 90日）
 
         Returns:
-            CheckedTable エンティティのリスト
+            AnalyzedTable エンティティのリスト（usage_info設定済み）
 
         Raises:
             TableRepositoryError: 参照回数取得に失敗した場合

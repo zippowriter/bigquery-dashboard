@@ -64,19 +64,19 @@ class ExportReferenceCountUseCase:
         tables = self._table_repository.list_tables(request.project_ids)
 
         # 2. 参照回数を取得
-        checked_tables = self._table_repository.get_table_reference_counts(
+        analyzed_tables = self._table_repository.get_table_reference_counts(
             tables,
             days_back=request.days_back,
         )
 
         # 3. ファイルに出力
-        self._file_writer.write_checked_tables(
-            checked_tables,
+        self._file_writer.write_analyzed_tables(
+            analyzed_tables,
             request.output_path,
             request.output_format,
         )
 
         return ExportReferenceCountResult(
-            tables_count=len(checked_tables),
+            tables_count=len(analyzed_tables),
             output_path=request.output_path,
         )

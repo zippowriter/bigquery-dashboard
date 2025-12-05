@@ -2,8 +2,10 @@
 
 import pytest
 
-from domain.entities.table import CheckedTable, Table
+from domain.entities.analyzed_table import AnalyzedTable
+from domain.entities.table import Table
 from domain.value_objects.table_id import TableId
+from domain.value_objects.usage_info import UsageInfo
 
 
 class TestTable:
@@ -61,43 +63,72 @@ class TestTable:
         assert table.id == table_id
 
 
-class TestCheckedTable:
-    """CheckedTableエンティティのテスト."""
+class TestUsageInfo:
+    """UsageInfo値オブジェクトのテスト."""
+
+    def test_is_unused_returns_true_when_job_count_is_zero(self) -> None:
+        """job_countが0の場合にTrueを返す."""
+        usage_info = UsageInfo(job_count=0, unique_user=0)
+        assert usage_info.is_unused() is True
+
+    def test_is_unused_with_threshold(self) -> None:
+        """閾値を指定した場合のテスト."""
+        usage_info = UsageInfo(job_count=3, unique_user=1)
+        assert usage_info.is_unused(threshold=5) is True
+        assert usage_info.is_unused(threshold=2) is False
+
+
+class TestAnalyzedTable:
+    """AnalyzedTableエンティティのテスト."""
 
     @pytest.fixture
     def table_id(self) -> TableId:
         """テスト用のTableId."""
         return TableId(project_id="project", dataset_id="dataset", table_id="table")
 
-    def test_is_unused_returns_true_when_job_count_is_zero(
-        self, table_id: TableId
-    ) -> None:
-        """job_countが0の場合にTrueを返す."""
-        table = CheckedTable(
-            table_id=table_id,
-            table_type="BASE TABLE",
-            job_count=0,
-            unique_user=0,
-        )
-        assert table.is_unused() is True
+    @pytest.fixture
+    def table(self, table_id: TableId) -> Table:
+        """テスト用のTable."""
+        return Table(table_id=table_id, table_type="BASE TABLE")
 
-    def test_is_unused_with_threshold(self, table_id: TableId) -> None:
-        """閾値を指定した場合のテスト."""
-        table = CheckedTable(
-            table_id=table_id,
-            table_type="BASE TABLE",
-            job_count=3,
-            unique_user=1,
-        )
-        assert table.is_unused(threshold=5) is True
-        assert table.is_unused(threshold=2) is False
+    def test_id_returns_table_id(self, table: Table, table_id: TableId) -> None:
+        """idプロパティがtable_idを返す."""
+        analyzed = AnalyzedTable(table=table)
+        assert analyzed.id == table_id
 
-    def test_usage_summary_returns_formatted_string(self, table_id: TableId) -> None:
-        """フォーマットされた文字列を返す."""
-        table = CheckedTable(
-            table_id=table_id,
-            table_type="BASE TABLE",
-            job_count=10,
-            unique_user=3,
+    def test_is_checked_returns_false_when_no_usage_info(self, table: Table) -> None:
+        """usage_infoがない場合はFalseを返す."""
+        analyzed = AnalyzedTable(table=table)
+        assert analyzed.is_checked is False
+
+    def test_is_checked_returns_true_when_usage_info_set(self, table: Table) -> None:
+        """usage_infoが設定されている場合はTrueを返す."""
+        analyzed = AnalyzedTable(
+            table=table,
+            usage_info=UsageInfo(job_count=10, unique_user=3),
         )
-        assert table.usage_summary() == "10 jobs, 3 users"
+        assert analyzed.is_checked is True
+
+    def test_with_usage_info_returns_new_instance(self, table: Table) -> None:
+        """with_usage_infoは新しいインスタンスを返す."""
+        analyzed = AnalyzedTable(table=table)
+        usage_info = UsageInfo(job_count=5, unique_user=2)
+        new_analyzed = analyzed.with_usage_info(usage_info)
+
+        assert new_analyzed is not analyzed
+        assert new_analyzed.usage_info == usage_info
+        assert analyzed.usage_info is None
+
+    def test_is_unused_raises_when_no_usage_info(self, table: Table) -> None:
+        """usage_infoがない場合はValueErrorを発生させる."""
+        analyzed = AnalyzedTable(table=table)
+        with pytest.raises(ValueError, match="Usage info is not set"):
+            analyzed.is_unused()
+
+    def test_is_unused_delegates_to_usage_info(self, table: Table) -> None:
+        """is_unusedはusage_infoに委譲する."""
+        analyzed = AnalyzedTable(
+            table=table,
+            usage_info=UsageInfo(job_count=0, unique_user=0),
+        )
+        assert analyzed.is_unused() is True

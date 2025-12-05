@@ -52,24 +52,3 @@ class Table(Entity[TableId]):
     def is_materialized_view(self) -> bool:
         """マテリアライズドビューかどうか."""
         return self.table_type == "MATERIALIZED VIEW"
-
-
-class CheckedTable(Table):
-    """参照回数が調べられたテーブルのモデル"""
-
-    job_count: int
-    unique_user: int
-
-    def is_unused(self, threshold: int = 0) -> bool:
-        """未使用テーブルかどうか."""
-        return self.job_count <= threshold
-
-    def usage_summary(self) -> str:
-        """利用状況のサマリー."""
-        return f"{self.job_count} jobs, {self.unique_user} users"
-
-
-class CandidateTable(Table):
-    """削除候補となるテーブルのモデル"""
-
-    data_owner: str

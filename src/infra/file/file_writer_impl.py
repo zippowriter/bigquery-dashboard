@@ -6,24 +6,24 @@ from typing import Literal
 
 import pandas as pd
 
+from domain.entities.analyzed_table import AnalyzedTable
 from domain.entities.lineage import LeafTable
-from domain.entities.table import CheckedTable
 from infra.file.exceptions import FileWriterError
 
 
 class PandasFileWriter:
     """pandasを使用したファイル出力リポジトリ実装."""
 
-    def write_checked_tables(
+    def write_analyzed_tables(
         self,
-        tables: Sequence[CheckedTable],
+        tables: Sequence[AnalyzedTable],
         output_path: Path,
         output_format: Literal["csv", "json"] = "csv",
     ) -> None:
-        """CheckedTableをファイルに出力する.
+        """AnalyzedTableをファイルに出力する.
 
         Args:
-            tables: 出力対象のCheckedTableリスト
+            tables: 出力対象のAnalyzedTableリスト
             output_path: 出力先ファイルパス
             output_format: 出力形式 ("csv" or "json")
 
@@ -36,12 +36,14 @@ class PandasFileWriter:
             df = pd.DataFrame(
                 [
                     {
-                        "project_id": t.table_id.project_id,
-                        "dataset_id": t.table_id.dataset_id,
-                        "table_id": t.table_id.table_id,
-                        "table_type": t.table_type,
-                        "job_count": t.job_count,
-                        "unique_user": t.unique_user,
+                        "project_id": t.table.table_id.project_id,
+                        "dataset_id": t.table.table_id.dataset_id,
+                        "table_id": t.table.table_id.table_id,
+                        "table_type": t.table.table_type,
+                        "job_count": t.usage_info.job_count if t.usage_info else None,
+                        "unique_user": t.usage_info.unique_user
+                        if t.usage_info
+                        else None,
                     }
                     for t in tables
                 ]

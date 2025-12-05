@@ -6,8 +6,10 @@ from typing import Any
 from google.api_core.exceptions import GoogleAPIError
 from google.cloud.bigquery import Client
 
-from domain.entities.table import CheckedTable, Table
+from domain.entities.analyzed_table import AnalyzedTable
+from domain.entities.table import Table
 from domain.value_objects.table_id import TableId
+from domain.value_objects.usage_info import UsageInfo
 from infra.bigquery.client import BigQueryClientFactory
 from infra.bigquery.exceptions import BigQueryQueryError, TableRepositoryError
 from infra.bigquery.queries.table_queries import (
@@ -72,7 +74,7 @@ class BigQueryTableRepository:
         self,
         tables: Sequence[Table],
         days_back: int = 90,
-    ) -> list[CheckedTable]:
+    ) -> list[AnalyzedTable]:
         """テーブルの参照回数とユニークユーザー数を取得する.
 
         Args:
@@ -80,7 +82,7 @@ class BigQueryTableRepository:
             days_back: 過去何日分のジョブを調査するか
 
         Returns:
-            CheckedTable エンティティのリスト
+            AnalyzedTable エンティティのリスト（usage_info設定済み）
 
         Raises:
             TableRepositoryError: 参照回数取得に失敗した場合
@@ -103,7 +105,7 @@ class BigQueryTableRepository:
                     )
                     reference_map[key] = (row["job_count"], row["unique_user"])
 
-                checked_tables: list[CheckedTable] = []
+                analyzed_tables: list[AnalyzedTable] = []
                 for table in tables:
                     key = (
                         table.table_id.project_id,
@@ -112,15 +114,16 @@ class BigQueryTableRepository:
                     )
                     job_count, unique_user = reference_map.get(key, (0, 0))
 
-                    checked_table = CheckedTable(
-                        table_id=table.table_id,
-                        table_type=table.table_type,
-                        job_count=job_count,
-                        unique_user=unique_user,
+                    analyzed_table = AnalyzedTable(
+                        table=table,
+                        usage_info=UsageInfo(
+                            job_count=job_count,
+                            unique_user=unique_user,
+                        ),
                     )
-                    checked_tables.append(checked_table)
+                    analyzed_tables.append(analyzed_table)
 
-                return checked_tables
+                return analyzed_tables
 
         except BigQueryQueryError as e:
             raise TableRepositoryError(

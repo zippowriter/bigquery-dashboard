@@ -9,8 +9,10 @@ from application.usecases.export_reference_count_usecase import (
     ExportReferenceCountRequest,
     ExportReferenceCountUseCase,
 )
-from domain.entities.table import CheckedTable, Table
+from domain.entities.analyzed_table import AnalyzedTable
+from domain.entities.table import Table
 from domain.value_objects.table_id import TableId
+from domain.value_objects.usage_info import UsageInfo
 
 
 @pytest.fixture
@@ -18,29 +20,23 @@ def mock_table_repository() -> Mock:
     """モックTableRepositoryのフィクスチャ."""
     mock = Mock()
 
-    # list_tablesの戻り値を設定
-    mock.list_tables.return_value = [
-        Table(
-            table_id=TableId(
-                project_id="project-a",
-                dataset_id="dataset1",
-                table_id="table1",
-            ),
-            table_type="BASE TABLE",
+    table = Table(
+        table_id=TableId(
+            project_id="project-a",
+            dataset_id="dataset1",
+            table_id="table1",
         ),
-    ]
+        table_type="BASE TABLE",
+    )
+
+    # list_tablesの戻り値を設定
+    mock.list_tables.return_value = [table]
 
     # get_table_reference_countsの戻り値を設定
     mock.get_table_reference_counts.return_value = [
-        CheckedTable(
-            table_id=TableId(
-                project_id="project-a",
-                dataset_id="dataset1",
-                table_id="table1",
-            ),
-            table_type="BASE TABLE",
-            job_count=100,
-            unique_user=5,
+        AnalyzedTable(
+            table=table,
+            usage_info=UsageInfo(job_count=100, unique_user=5),
         ),
     ]
 
@@ -86,7 +82,7 @@ class TestExportReferenceCountUseCase:
         mock_table_repository.get_table_reference_counts.assert_called_once()
 
         # ファイル出力が呼び出されたことを確認
-        mock_file_writer.write_checked_tables.assert_called_once()
+        mock_file_writer.write_analyzed_tables.assert_called_once()
 
     def test_execute_with_json_format(
         self,
@@ -111,7 +107,7 @@ class TestExportReferenceCountUseCase:
         usecase.execute(request)
 
         # ファイル出力がJSON形式で呼び出されたことを確認
-        call_args = mock_file_writer.write_checked_tables.call_args
+        call_args = mock_file_writer.write_analyzed_tables.call_args
         assert call_args[0][2] == "json"  # output_format
 
     def test_execute_with_multiple_projects(
