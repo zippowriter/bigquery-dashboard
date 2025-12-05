@@ -174,7 +174,8 @@ class TestExportLeafTablesUseCase:
 
         # root_tablesモードのメソッドが呼ばれる
         mock_lineage_repository.find_leaf_tables_from_roots.assert_called_once_with(
-            root_tables
+            root_tables,
+            allowed_project_ids=None,
         )
         mock_file_writer.write_leaf_tables.assert_called_once()
 
