@@ -300,9 +300,7 @@ class TestFindLeafTablesFromRoots:
         assert result[0].table_id == middle
         assert result[0].table_id.project_id == "project-b"
 
-    def test_project_filtering_none_allows_all(
-        self, mock_client_factory: Mock
-    ) -> None:
+    def test_project_filtering_none_allows_all(self, mock_client_factory: Mock) -> None:
         """allowed_project_ids=None の場合は全プロジェクトを探索することを確認."""
         repo = DataCatalogLineageRepository(mock_client_factory)
 
